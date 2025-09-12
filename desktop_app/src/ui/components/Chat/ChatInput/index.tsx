@@ -187,10 +187,7 @@ export default function ChatInput({
             </Tooltip>
           </AIInputTools>
 
-          <AIInputSubmit
-            onClick={isLoading ? stop : undefined}
-            disabled={!input.trim() && !isLoading && !isSubmitting}
-          />
+          <AIInputSubmit onClick={isLoading ? stop : undefined} disabled={!input.trim() || isLoading || isSubmitting} />
         </AIInputToolbar>
       </AIInput>
     </TooltipProvider>
