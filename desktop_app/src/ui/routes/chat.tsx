@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ChatHistory from '@ui/components/Chat/ChatHistory';
 import ChatInput from '@ui/components/Chat/ChatInput';
 import EmptyChatState from '@ui/components/Chat/EmptyChatState';
+import { GeneratingChatOnBackground } from '@ui/components/Chat/GeneratingChatOnBackground';
 import SystemPrompt from '@ui/components/Chat/SystemPrompt';
 import config from '@ui/config';
 import { useMessageActions } from '@ui/hooks/useMessageActions';
@@ -213,12 +214,21 @@ function ChatPage() {
   // Check if the chat is empty (no messages)
   const isChatEmpty = messages.length === 0;
 
+  const runningTasks = useStatusBarStore((state) => state.tasks);
+  const isChatGenerating = runningTasks.get(`chat-${currentChatSessionId}`)?.status === 'active';
+
   return (
     <div className="flex flex-col h-full gap-2 max-w-full overflow-hidden">
       {isChatEmpty ? (
-        <div className="flex-1 min-h-0 overflow-auto">
-          <EmptyChatState onPromptSelect={handlePromptSelect} />
-        </div>
+        isChatGenerating ? (
+          <div className="flex-1 min-h-0 flex items-center justify-center overflow-auto">
+            <GeneratingChatOnBackground />
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 overflow-auto">
+            <EmptyChatState onPromptSelect={handlePromptSelect} />
+          </div>
+        )
       ) : (
         <div className="flex-1 min-h-0 overflow-hidden max-w-full">
           <ChatHistory
