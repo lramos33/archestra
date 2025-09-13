@@ -6,7 +6,6 @@ import { Textarea } from '@ui/components/ui/textarea';
 
 interface UserMessageProps {
   message: UIMessage;
-  messageIndex: number;
   isEditing: boolean;
   editingContent: string;
   onEditStart: () => void;
@@ -68,6 +67,7 @@ export default function UserMessage({
         <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onEditStart} title="Edit message">
           <Edit2 className="h-3 w-3" />
         </Button>
+
         <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onDelete} title="Delete message">
           <Trash2 className="h-3 w-3" />
         </Button>

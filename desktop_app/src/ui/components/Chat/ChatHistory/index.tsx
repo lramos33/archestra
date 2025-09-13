@@ -14,10 +14,10 @@ const CHAT_SCROLL_AREA_SELECTOR = `#${CHAT_SCROLL_AREA_ID} [data-radix-scroll-ar
 interface ChatHistoryProps {
   messages: UIMessage[];
   chatId: number;
+  pendingPrompt: string | undefined;
   sessionId: string;
   editingMessageId: string | null;
   editingContent: string;
-  isRunningInBackground: boolean;
   onEditStart: (messageId: string, content: string) => void;
   onEditCancel: () => void;
   onEditSave: (messageId: string) => void;
@@ -99,8 +99,8 @@ const Message = ({
   }
 };
 
-const getMessageClassName = (message: UIMessage) => {
-  switch (message.role) {
+const getMessageClassName = (role: 'user' | 'assistant' | 'system') => {
+  switch (role) {
     case 'user':
       return 'bg-primary border border-primary/20 ml-8 text-primary-foreground';
     case 'assistant':
@@ -114,7 +114,7 @@ const getMessageClassName = (message: UIMessage) => {
 
 export default function ChatHistory({
   messages,
-  isRunningInBackground,
+  pendingPrompt,
   chatId,
   sessionId,
   editingMessageId,
@@ -192,13 +192,17 @@ export default function ChatHistory({
     return () => clearTimeout(timeoutId);
   }, [messages, isSubmitting, scrollToBottom]);
 
+  const hasSamePromptInMessages = messages.some(
+    (message) => message.parts?.[0]?.type === 'text' && message.parts?.[0]?.text === pendingPrompt
+  );
+
   return (
     <ScrollArea id={CHAT_SCROLL_AREA_ID} className="h-full w-full border rounded-lg overflow-hidden">
       <div className="p-4 space-y-4 max-w-full overflow-hidden">
         {messages.map((message, index) => (
           <div
             key={message.id || `message-${index}`}
-            className={cn('p-3 rounded-lg overflow-hidden min-w-0', getMessageClassName(message))}
+            className={cn('p-3 rounded-lg overflow-hidden min-w-0', getMessageClassName(message.role))}
           >
             <div className="text-xs font-medium mb-1 opacity-70 capitalize">{message.role}</div>
             <div className="overflow-hidden min-w-0">
@@ -220,6 +224,39 @@ export default function ChatHistory({
           </div>
         ))}
 
+        {pendingPrompt && !hasSamePromptInMessages && (
+          <div className={cn('p-3 rounded-lg overflow-hidden min-w-0', getMessageClassName('user'), 'bg-red-500')}>
+            <div className="text-xs font-medium mb-1 opacity-70 capitalize">user</div>
+            <div className="overflow-hidden min-w-0">
+              <UserMessage
+                message={
+                  { id: 'pending-prompt', role: 'user', parts: [{ type: 'text', text: pendingPrompt }] } as UIMessage
+                }
+                key="pending-prompt"
+                isEditing={false}
+                editingContent=""
+                onEditStart={() => {}}
+                onEditCancel={() => {}}
+                onEditSave={() => {}}
+                onEditChange={() => {}}
+                onDelete={() => {}}
+              />
+            </div>
+          </div>
+        )}
+
+        {pendingPrompt && !hasSamePromptInMessages && (
+          <div className="p-3 rounded-lg overflow-hidden min-w-0 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800/30 mr-8">
+            <div className="text-xs font-medium mb-1 opacity-70 capitalize text-orange-600 dark:text-orange-400">
+              system
+            </div>
+
+            <div className="overflow-hidden min-w-0">
+              <RunningInBackgroundMessage chatId={chatId} />
+            </div>
+          </div>
+        )}
+
         {isSubmitting && !isRegenerating && (
           <div className="p-3 rounded-lg overflow-hidden min-w-0 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/30 mr-8">
             <div className="text-xs font-medium mb-1 opacity-70 capitalize text-blue-600 dark:text-blue-400">
@@ -228,18 +265,6 @@ export default function ChatHistory({
 
             <div className="overflow-hidden min-w-0">
               <SubmissionLoadingMessage startTime={submissionStartTime} />
-            </div>
-          </div>
-        )}
-
-        {isRunningInBackground && (
-          <div className="p-3 rounded-lg overflow-hidden min-w-0 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800/30 mr-8">
-            <div className="text-xs font-medium mb-1 opacity-70 capitalize text-orange-600 dark:text-orange-400">
-              system
-            </div>
-
-            <div className="overflow-hidden min-w-0">
-              <RunningInBackgroundMessage chatId={chatId} sessionId={sessionId} messages={messages} />
             </div>
           </div>
         )}

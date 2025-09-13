@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ChatHistory from '@ui/components/Chat/ChatHistory';
 import ChatInput from '@ui/components/Chat/ChatInput';
 import EmptyChatState from '@ui/components/Chat/EmptyChatState';
-import { GeneratingChatOnBackground } from '@ui/components/Chat/GeneratingChatOnBackground';
 import SystemPrompt from '@ui/components/Chat/SystemPrompt';
 import config from '@ui/config';
 import { useMessageActions } from '@ui/hooks/useMessageActions';
@@ -19,9 +18,7 @@ export const Route = createFileRoute('/chat')({
 
 function ChatPage() {
   const { getCurrentChat, getCurrentChatTitle } = useChatStore();
-  const generatingChats = useChatStore((s) => s.generatingChats);
-  const setGeneratingChats = useChatStore((s) => s.setGeneratingChats);
-  const removeGeneratingChat = useChatStore((s) => s.removeGeneratingChat);
+
   const { selectedToolIds } = useToolsStore();
   const { selectedModel } = useOllamaStore();
   const { availableCloudProviderModels } = useCloudProvidersStore();
@@ -78,9 +75,6 @@ function ChatPage() {
     transport,
     onError: (error) => {
       console.error('Chat error:', error);
-      if (currentChatSessionId) {
-        removeGeneratingChat(currentChatSessionId);
-      }
     },
   });
 
@@ -135,15 +129,6 @@ function ChatPage() {
     }
   }, [status, isSubmitting, currentChatSessionId, currentChatTitle, setChatInference]);
 
-  // When streaming finishes and there is an assistant reply, clear background-generating flag
-  useEffect(() => {
-    if (status === 'ready' && currentChatSessionId) {
-      const lastMessage = messages.at(-1);
-      const isLastMessageAssistant = lastMessage?.role === 'assistant';
-      if (isLastMessageAssistant) removeGeneratingChat(currentChatSessionId);
-    }
-  }, [status, currentChatSessionId, messages, removeGeneratingChat]);
-
   useEffect(() => {
     if (isLoading) {
       setIsSubmitting(false);
@@ -162,8 +147,6 @@ function ChatPage() {
       setRegeneratingIndex(null);
     }
   }, [status, regeneratingIndex, fullMessagesBackup]);
-
-  console.log({ generatingChats });
 
   // Clear regenerating state and merge new message when streaming finishes
   useEffect(() => {
@@ -208,13 +191,11 @@ function ChatPage() {
 
   const handleSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
+
     if (localInput.trim()) {
       setIsSubmitting(true);
       setSubmissionStartTime(Date.now());
-      if (currentChat) {
-        console.log('setting generating chat', currentChat);
-        setGeneratingChats(currentChat);
-      }
+      setPendingPrompts(currentChatSessionId, localInput);
       sendMessage({ text: localInput });
       setLocalInput('');
     }
@@ -223,50 +204,52 @@ function ChatPage() {
   const handlePromptSelect = (prompt: string) => {
     setIsSubmitting(true);
     setSubmissionStartTime(Date.now());
-    if (currentChat) {
-      console.log('setting generating chat', currentChat);
-      setGeneratingChats(currentChat);
-    }
     // Directly send the prompt when a tile is clicked
     sendMessage({ text: prompt });
   };
+
+  // ================ Running on background logic ================ //
+  const pendingPrompts = useChatStore((s) => s.pendingPrompts);
+  const setPendingPrompts = useChatStore((s) => s.setPendingPrompts);
+  const removePendingPrompt = useChatStore((s) => s.removePendingPrompt);
+
+  const pendingPrompt = pendingPrompts.get(currentChatSessionId);
+
+  // When streaming finishes and there is an assistant reply and the second to
+  // last message is the same as the pending prompt, remove the pending prompt
+  useEffect(() => {
+    if (status === 'ready' && currentChatSessionId) {
+      const secondToLastMessage = messages.at(-2);
+      const lastMessage = messages.at(-1);
+
+      const isSecondToLastMessageSameAsPendingPrompt =
+        secondToLastMessage?.parts?.[0]?.type === 'text' && secondToLastMessage?.parts?.[0]?.text === pendingPrompt;
+      const isLastMessageAssistant = lastMessage?.role === 'assistant';
+      if (isLastMessageAssistant && isSecondToLastMessageSameAsPendingPrompt) removePendingPrompt(currentChatSessionId);
+    }
+  }, [status, currentChatSessionId, messages]);
+
+  // ================================== //
 
   if (!currentChat) {
     // TODO: this is a temporary solution, maybe let's make some cool loading animations with a mascot?
     return null;
   }
 
-  // Check if the chat is empty (no messages)
   const isChatEmpty = messages.length === 0;
-
-  const isChatGenerating = currentChatSessionId ? generatingChats.has(currentChatSessionId) : false;
-
-  const lastMessage = messages.at(-1);
-  const part = lastMessage?.parts[1];
-  const isRunningInBackground =
-    isChatGenerating && lastMessage?.role === 'assistant' && part?.type === 'text' && part.state === 'done';
 
   return (
     <div className="flex flex-col h-full gap-2 max-w-full overflow-hidden">
-      {/* {JSON.stringify({ messages })} */}
-      {JSON.stringify(generatingChats.get(currentChatSessionId))}
-
-      {isChatEmpty ? (
-        isChatGenerating ? (
-          <div className="flex-1 min-h-0 flex items-center justify-center overflow-auto">
-            <GeneratingChatOnBackground chatId={currentChat.id} sessionId={currentChatSessionId} messages={messages} />
-          </div>
-        ) : (
-          <div className="flex-1 min-h-0 overflow-auto">
-            <EmptyChatState onPromptSelect={handlePromptSelect} />
-          </div>
-        )
+      {isChatEmpty && !pendingPrompt ? (
+        <div className="flex-1 min-h-0 overflow-auto">
+          <EmptyChatState onPromptSelect={handlePromptSelect} />
+        </div>
       ) : (
         <div className="flex-1 min-h-0 overflow-hidden max-w-full">
           <ChatHistory
             chatId={currentChat.id}
+            pendingPrompt={pendingPrompt}
             sessionId={currentChatSessionId}
-            isRunningInBackground={isRunningInBackground}
             messages={regeneratingIndex !== null && fullMessagesBackup.length > 0 ? fullMessagesBackup : messages}
             editingMessageId={editingMessageId}
             editingContent={editingContent}

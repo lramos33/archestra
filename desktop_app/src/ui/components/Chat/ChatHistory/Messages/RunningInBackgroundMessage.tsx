@@ -1,4 +1,3 @@
-import { UIMessage } from 'ai';
 import { Send } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -6,13 +5,11 @@ import { useChatStore } from '@ui/stores';
 
 interface RunningInBackgroundMessageProps {
   chatId: number;
-  sessionId: string;
-  messages: UIMessage[];
 }
 
-export default function RunningInBackgroundMessage({ chatId, sessionId, messages }: RunningInBackgroundMessageProps) {
+export default function RunningInBackgroundMessage({ chatId }: RunningInBackgroundMessageProps) {
   const [dots, setDots] = useState('');
-  const { selectChat, removeGeneratingChat } = useChatStore();
+  const { selectChat } = useChatStore();
 
   // Animate dots
   useEffect(() => {
@@ -28,13 +25,12 @@ export default function RunningInBackgroundMessage({ chatId, sessionId, messages
 
   const handleRefresh = () => {
     selectChat(chatId);
-    if (messages.length > 0) removeGeneratingChat(sessionId);
   };
 
   useEffect(() => {
     const intervalId = setInterval(() => {
       handleRefresh();
-    }, 3000);
+    }, 2000);
     return () => clearInterval(intervalId);
   }, []);
 

@@ -10,7 +10,7 @@ interface ChatState {
   chats: ChatWithMessages[];
   currentChatSessionId: string | null;
   isLoadingChats: boolean;
-  generatingChats: Map<string, ChatWithMessages>;
+  pendingPrompts: Map<string, string>;
 }
 
 interface ChatActions {
@@ -22,9 +22,8 @@ interface ChatActions {
   deleteCurrentChat: () => Promise<void>;
   updateChatTitle: (chatId: number, title: string) => Promise<void>;
   initializeStore: () => Promise<void>;
-  setGeneratingChats: (chat: ChatWithMessages) => void;
-  removeGeneratingChat: (sessionId: string) => void;
-  isChatGenerating: (sessionId: string) => boolean;
+  setPendingPrompts: (sessionId: string, prompt: string) => void;
+  removePendingPrompt: (sessionId: string) => void;
 }
 
 type ChatStore = ChatState & ChatActions;
@@ -46,28 +45,22 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   chats: [],
   currentChatSessionId: null,
   isLoadingChats: false,
-  generatingChats: new Map<string, ChatWithMessages>(),
+  pendingPrompts: new Map<string, string>(),
 
-  // Actions
-  setGeneratingChats: (chat: ChatWithMessages) => {
+  setPendingPrompts: (sessionId: string, prompt: string) => {
     set((state) => {
-      const nextGenerating = new Map(state.generatingChats);
-      nextGenerating.set(chat.sessionId, chat);
-      return { generatingChats: nextGenerating };
+      const nextPendingPrompts = new Map(state.pendingPrompts);
+      nextPendingPrompts.set(sessionId, prompt);
+      return { pendingPrompts: nextPendingPrompts };
     });
   },
 
-  removeGeneratingChat: (sessionId: string) => {
+  removePendingPrompt: (sessionId: string) => {
     set((state) => {
-      if (!state.generatingChats.has(sessionId)) return {};
-      const nextGenerating = new Map(state.generatingChats);
-      nextGenerating.delete(sessionId);
-      return { generatingChats: nextGenerating };
+      const nextPendingPrompts = new Map(state.pendingPrompts);
+      nextPendingPrompts.delete(sessionId);
+      return { pendingPrompts: nextPendingPrompts };
     });
-  },
-
-  isChatGenerating: (sessionId: string) => {
-    return get().generatingChats.has(sessionId);
   },
 
   loadChats: async () => {
@@ -133,11 +126,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           chats: state.chats.map((chat) => (chat.id === chatId ? initializedChat : chat)),
           currentChatSessionId: initializedChat.sessionId,
         }));
-
-        // If there is already an assistant message, clear background-generating flag
-        // if (initializedChat.messages?.some((m) => m.role === 'assistant')) {
-        //   get().removeGeneratingChat(initializedChat.sessionId);
-        // }
       }
     } catch (error) {
       console.error('Failed to load chat messages:', error);
