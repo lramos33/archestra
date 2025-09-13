@@ -18,7 +18,6 @@ export const Route = createFileRoute('/chat')({
 
 function ChatPage() {
   const { getCurrentChat, getCurrentChatTitle } = useChatStore();
-
   const { selectedToolIds } = useToolsStore();
   const { selectedModel } = useOllamaStore();
   const { availableCloudProviderModels } = useCloudProvidersStore();
@@ -183,7 +182,7 @@ function ChatPage() {
       // Clear messages when no chat or empty chat
       setMessages([]);
     }
-  }, [currentChatSessionId, currentChatMessages]); // Depend on both session ID and messages
+  }, [currentChatSessionId]); // Only depend on session ID to avoid infinite loop
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setLocalInput(e.target.value);

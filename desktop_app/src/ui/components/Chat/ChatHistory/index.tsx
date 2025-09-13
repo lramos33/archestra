@@ -116,7 +116,6 @@ export default function ChatHistory({
   messages,
   pendingPrompt,
   chatId,
-  sessionId,
   editingMessageId,
   editingContent,
   onEditStart,
