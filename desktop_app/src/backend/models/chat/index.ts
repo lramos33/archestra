@@ -8,7 +8,9 @@ import {
   SelectMessagesSchema as DatabaseMessageRepresentationSchema,
   messagesTable,
 } from '@backend/database/schema/messages';
+import ollamaClient from '@backend/ollama/client';
 import log from '@backend/utils/logger';
+import WebSocketService from '@backend/websocket';
 
 const TransformedMessageSchema = DatabaseMessageRepresentationSchema.extend({
   /**
@@ -34,6 +36,178 @@ type ChatWithMessages = z.infer<typeof ChatWithMessagesSchema>;
 export default class ChatModel {
   static generateCompositeMessageId = (chat: Chat, message: DatabaseMessage): string =>
     `${chat.sessionId}-${message.id}`;
+
+  /**
+   * Get selected tools for a chat
+   * @param chatId The chat ID
+   * @returns Array of selected tool IDs, or null if all tools are selected
+   */
+  static async getSelectedTools(chatId: number): Promise<string[] | null> {
+    const [chat] = await db.select().from(chatsTable).where(eq(chatsTable.id, chatId)).limit(1);
+
+    if (!chat) {
+      throw new Error(`Chat not found: ${chatId}`);
+    }
+
+    return chat.selectedTools as string[] | null;
+  }
+
+  /**
+   * Update selected tools for a chat
+   * @param chatId The chat ID
+   * @param toolIds Array of tool IDs to set as selected, or null to select all
+   */
+  static async updateSelectedTools(chatId: number, toolIds: string[] | null): Promise<void> {
+    await db
+      .update(chatsTable)
+      .set({
+        selectedTools: toolIds,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(chatsTable.id, chatId));
+
+    // Broadcast the update via WebSocket
+    WebSocketService.broadcast({
+      type: 'chat-tools-updated',
+      payload: {
+        chatId,
+        selectedTools: toolIds,
+      },
+    });
+  }
+
+  /**
+   * Add tools to the chat's selection
+   * @param chatId The chat ID
+   * @param toolIds Array of tool IDs to add
+   */
+  static async addSelectedTools(chatId: number, toolIds: string[]): Promise<string[]> {
+    const currentTools = await this.getSelectedTools(chatId);
+
+    let updatedTools: string[];
+
+    if (currentTools === null) {
+      // When null (all tools selected), we need to convert to explicit list
+      // Get all available tools and ensure the new ones are included
+      const { default: toolAggregator } = await import('@backend/llms/toolAggregator');
+      const allAvailableTools = toolAggregator.getAllAvailableTools();
+      const allToolIds = allAvailableTools.map((tool) => tool.id);
+
+      // Make sure all tools including the new ones are in the list
+      const toolSet = new Set([...allToolIds, ...toolIds]);
+      updatedTools = Array.from(toolSet);
+    } else {
+      // Add new tools to existing selection, avoiding duplicates
+      const toolSet = new Set([...currentTools, ...toolIds]);
+      updatedTools = Array.from(toolSet);
+    }
+
+    await this.updateSelectedTools(chatId, updatedTools);
+    return updatedTools;
+  }
+
+  /**
+   * Remove tools from the chat's selection
+   * @param chatId The chat ID
+   * @param toolIds Array of tool IDs to remove
+   */
+  static async removeSelectedTools(chatId: number, toolIds: string[]): Promise<string[]> {
+    const currentTools = await this.getSelectedTools(chatId);
+
+    let updatedTools: string[];
+
+    if (currentTools === null) {
+      // When null (all tools selected), we need to convert to explicit list first
+      // then remove the specified tools
+      const { default: toolAggregator } = await import('@backend/llms/toolAggregator');
+      const allAvailableTools = toolAggregator.getAllAvailableTools();
+      const allToolIds = allAvailableTools.map((tool) => tool.id);
+
+      // Remove specified tools from the full list
+      const toolSet = new Set(allToolIds);
+      for (const toolId of toolIds) {
+        toolSet.delete(toolId);
+      }
+      updatedTools = Array.from(toolSet);
+    } else {
+      // Remove specified tools from existing selection
+      const toolSet = new Set(currentTools);
+      for (const toolId of toolIds) {
+        toolSet.delete(toolId);
+      }
+      updatedTools = Array.from(toolSet);
+    }
+
+    await this.updateSelectedTools(chatId, updatedTools);
+    return updatedTools;
+  }
+
+  /**
+   * Select all available tools for a chat (sets selectedTools to null)
+   * @param chatId The chat ID
+   */
+  static async selectAllTools(chatId: number): Promise<void> {
+    await this.updateSelectedTools(chatId, null);
+  }
+
+  /**
+   * Deselect all tools for a chat (sets selectedTools to empty array)
+   * @param chatId The chat ID
+   */
+  static async deselectAllTools(chatId: number): Promise<void> {
+    await this.updateSelectedTools(chatId, []);
+  }
+
+  static async generateAndUpdateChatTitle(chatId: number, messages: UIMessage[]): Promise<void> {
+    try {
+      // Extract text content from the first few messages for title generation
+      const messageTexts: string[] = [];
+
+      for (const msg of messages.slice(0, 4)) {
+        // UIMessage has a parts array, extract text from text parts
+        let textContent = '';
+
+        if (msg.parts) {
+          for (const part of msg.parts) {
+            if (part.type === 'text' && part.text) {
+              textContent += part.text + ' ';
+            }
+          }
+        }
+
+        if (textContent.trim()) {
+          messageTexts.push(`${msg.role}: ${textContent.trim()}`);
+        }
+      }
+
+      if (messageTexts.length > 0) {
+        const title = await ollamaClient.generateChatTitle(messageTexts);
+
+        // Update the chat with the generated title
+        await db
+          .update(chatsTable)
+          .set({
+            title,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(chatsTable.id, chatId));
+
+        // Broadcast the title update via WebSocket
+        WebSocketService.broadcast({
+          type: 'chat-title-updated',
+          payload: {
+            chatId,
+            title,
+          },
+        });
+
+        log.info(`Generated title for chat ${chatId}: ${title}`);
+      }
+    } catch (error) {
+      log.error(`Failed to generate title for chat ${chatId}:`, error);
+      // Don't throw - title generation failure shouldn't break message saving
+    }
+  }
 
   static async getAllChats(): Promise<ChatWithMessages[]> {
     const rows = await db
@@ -172,6 +346,11 @@ export default class ChatModel {
         content: message, // Store the entire UIMessage
         createdAt: timestamp, // Explicit timestamp with order preservation
       });
+    }
+
+    // Generate a title if the chat has 4+ messages and no title yet
+    if (messages.length >= 4 && !chat.title) {
+      await this.generateAndUpdateChatTitle(chat.id, messages);
     }
   }
 }

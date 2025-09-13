@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "a358d4b7-7c93-4ee6-abfd-e9c4ed53cc3a",
-  "prevId": "0f993021-fbef-4ac0-8026-792ef4b3bb69",
+  "id": "db7575d0-938a-4a68-a22a-1b48f3ed9660",
+  "prevId": "bcc6c8ef-0600-4a63-baa9-a17311b2005c",
   "tables": {
     "chats": {
       "name": "chats",
@@ -365,6 +365,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "oauth_config": {
+          "name": "oauth_config",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "status": {
           "name": "status",
           "type": "text",
@@ -611,13 +618,6 @@
         },
         "idempotent": {
           "name": "idempotent",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "reversible": {
-          "name": "reversible",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,

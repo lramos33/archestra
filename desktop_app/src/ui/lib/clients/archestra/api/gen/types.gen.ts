@@ -49,13 +49,13 @@ export type OAuthServerConfigInput = {
   requires_proxy?: boolean;
   provider_name?: string;
   browser_auth?: boolean;
+  streamable_http_url?: string;
+  streamable_http_port?: number;
 };
 
 export type ToolAnalysisResultInput = {
   is_read: boolean;
   is_write: boolean;
-  idempotent: boolean;
-  reversible: boolean;
 };
 
 export type ToolInput = {
@@ -74,8 +74,6 @@ export type ToolInput = {
     | null;
   is_read: boolean | null;
   is_write: boolean | null;
-  idempotent: boolean | null;
-  reversible: boolean | null;
   analyzed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -159,6 +157,15 @@ export type ChatWithMessagesInput = {
   id: number;
   sessionId: string;
   title: string | null;
+  selectedTools:
+    | (
+        | (string | number | boolean | null)
+        | {
+            [key: string]: unknown;
+          }
+        | Array<unknown>
+      )
+    | null;
   createdAt: string;
   updatedAt: string;
   messages: Array<{
@@ -279,6 +286,7 @@ export type McpServerInput = {
   oauthClientInfo: OAuthClientInformationInput | null;
   oauthServerMetadata: AuthorizationServerMetadataInput | null;
   oauthResourceMetadata: OAuthProtectedResourceMetadataInput | null;
+  oauthConfig: unknown | null;
   status: 'installing' | 'oauth_pending' | 'installed' | 'failed';
   serverType: 'local' | 'remote';
   remoteUrl: string | null;
@@ -351,14 +359,6 @@ export type AvailableToolInput = {
      * Whether the tool writes data
      */
     is_write: boolean | null;
-    /**
-     * Whether the tool is idempotent
-     */
-    idempotent: boolean | null;
-    /**
-     * Whether the tool actions are reversible
-     */
-    reversible: boolean | null;
   };
 };
 
@@ -476,13 +476,13 @@ export type OAuthServerConfig = {
   requires_proxy?: boolean;
   provider_name?: string;
   browser_auth?: boolean;
+  streamable_http_url?: string;
+  streamable_http_port?: number;
 };
 
 export type ToolAnalysisResult = {
   is_read: boolean;
   is_write: boolean;
-  idempotent: boolean;
-  reversible: boolean;
 };
 
 export type Tool = {
@@ -501,8 +501,6 @@ export type Tool = {
     | null;
   is_read: boolean | null;
   is_write: boolean | null;
-  idempotent: boolean | null;
-  reversible: boolean | null;
   analyzed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -586,6 +584,15 @@ export type ChatWithMessages = {
   id: number;
   sessionId: string;
   title: string | null;
+  selectedTools:
+    | (
+        | (string | number | boolean | null)
+        | {
+            [key: string]: unknown;
+          }
+        | Array<unknown>
+      )
+    | null;
   createdAt: string;
   updatedAt: string;
   messages: Array<{
@@ -706,6 +713,7 @@ export type McpServer = {
   oauthClientInfo: OAuthClientInformation | null;
   oauthServerMetadata: AuthorizationServerMetadata | null;
   oauthResourceMetadata: OAuthProtectedResourceMetadata | null;
+  oauthConfig: unknown | null;
   status: 'installing' | 'oauth_pending' | 'installed' | 'failed';
   serverType: 'local' | 'remote';
   remoteUrl: string | null;
@@ -778,14 +786,6 @@ export type AvailableTool = {
      * Whether the tool writes data
      */
     is_write: boolean | null;
-    /**
-     * Whether the tool is idempotent
-     */
-    idempotent: boolean | null;
-    /**
-     * Whether the tool actions are reversible
-     */
-    reversible: boolean | null;
   };
 };
 
@@ -1016,6 +1016,190 @@ export type UpdateChatResponses = {
 
 export type UpdateChatResponse = UpdateChatResponses[keyof UpdateChatResponses];
 
+export type GetChatSelectedToolsData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/chat/{id}/tools';
+};
+
+export type GetChatSelectedToolsErrors = {
+  /**
+   * Default Response
+   */
+  404: {
+    error: string;
+  };
+};
+
+export type GetChatSelectedToolsError = GetChatSelectedToolsErrors[keyof GetChatSelectedToolsErrors];
+
+export type GetChatSelectedToolsResponses = {
+  /**
+   * Default Response
+   */
+  200: {
+    selectedTools: Array<string> | null;
+    availableTools: Array<AvailableTool>;
+  };
+};
+
+export type GetChatSelectedToolsResponse = GetChatSelectedToolsResponses[keyof GetChatSelectedToolsResponses];
+
+export type SelectChatToolsData = {
+  body: {
+    toolIds: Array<string>;
+  };
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/chat/{id}/tools/select';
+};
+
+export type SelectChatToolsErrors = {
+  /**
+   * Default Response
+   */
+  404: {
+    error: string;
+  };
+};
+
+export type SelectChatToolsError = SelectChatToolsErrors[keyof SelectChatToolsErrors];
+
+export type SelectChatToolsResponses = {
+  /**
+   * Default Response
+   */
+  200: {
+    selectedTools: Array<string>;
+  };
+};
+
+export type SelectChatToolsResponse = SelectChatToolsResponses[keyof SelectChatToolsResponses];
+
+export type DeselectChatToolsData = {
+  body: {
+    toolIds: Array<string>;
+  };
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/chat/{id}/tools/deselect';
+};
+
+export type DeselectChatToolsErrors = {
+  /**
+   * Default Response
+   */
+  400: {
+    error: string;
+  };
+  /**
+   * Default Response
+   */
+  404: {
+    error: string;
+  };
+};
+
+export type DeselectChatToolsError = DeselectChatToolsErrors[keyof DeselectChatToolsErrors];
+
+export type DeselectChatToolsResponses = {
+  /**
+   * Default Response
+   */
+  200: {
+    selectedTools: Array<string>;
+  };
+};
+
+export type DeselectChatToolsResponse = DeselectChatToolsResponses[keyof DeselectChatToolsResponses];
+
+export type SelectAllChatToolsData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/chat/{id}/tools/select-all';
+};
+
+export type SelectAllChatToolsErrors = {
+  /**
+   * Default Response
+   */
+  404: {
+    error: string;
+  };
+};
+
+export type SelectAllChatToolsError = SelectAllChatToolsErrors[keyof SelectAllChatToolsErrors];
+
+export type SelectAllChatToolsResponses = {
+  /**
+   * Default Response
+   */
+  200: {
+    message: string;
+  };
+};
+
+export type SelectAllChatToolsResponse = SelectAllChatToolsResponses[keyof SelectAllChatToolsResponses];
+
+export type DeselectAllChatToolsData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/chat/{id}/tools/deselect-all';
+};
+
+export type DeselectAllChatToolsErrors = {
+  /**
+   * Default Response
+   */
+  404: {
+    error: string;
+  };
+};
+
+export type DeselectAllChatToolsError = DeselectAllChatToolsErrors[keyof DeselectAllChatToolsErrors];
+
+export type DeselectAllChatToolsResponses = {
+  /**
+   * Default Response
+   */
+  200: {
+    message: string;
+  };
+};
+
+export type DeselectAllChatToolsResponse = DeselectAllChatToolsResponses[keyof DeselectAllChatToolsResponses];
+
+export type GetChatAvailableToolsData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/chat/{id}/tools/available';
+};
+
+export type GetChatAvailableToolsResponses = {
+  /**
+   * Default Response
+   */
+  200: Array<AvailableTool>;
+};
+
+export type GetChatAvailableToolsResponse = GetChatAvailableToolsResponses[keyof GetChatAvailableToolsResponses];
+
 export type GetAvailableCloudProvidersData = {
   body?: never;
   path?: never;
@@ -1207,7 +1391,6 @@ export type StartGenericOAuthResponse = StartGenericOAuthResponses[keyof StartGe
 
 export type CompleteGenericOAuthData = {
   body: {
-    serverId: string;
     code: string;
     state: string;
   };
