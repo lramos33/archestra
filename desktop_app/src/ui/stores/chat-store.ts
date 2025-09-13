@@ -10,6 +10,7 @@ interface ChatState {
   chats: ChatWithMessages[];
   currentChatSessionId: string | null;
   isLoadingChats: boolean;
+  generatingChats: Map<string, ChatWithMessages>;
 }
 
 interface ChatActions {
@@ -21,6 +22,9 @@ interface ChatActions {
   deleteCurrentChat: () => Promise<void>;
   updateChatTitle: (chatId: number, title: string) => Promise<void>;
   initializeStore: () => Promise<void>;
+  setGeneratingChats: (chat: ChatWithMessages) => void;
+  removeGeneratingChat: (sessionId: string) => void;
+  isChatGenerating: (sessionId: string) => boolean;
 }
 
 type ChatStore = ChatState & ChatActions;
@@ -42,8 +46,30 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   chats: [],
   currentChatSessionId: null,
   isLoadingChats: false,
+  generatingChats: new Map<string, ChatWithMessages>(),
 
   // Actions
+  setGeneratingChats: (chat: ChatWithMessages) => {
+    set((state) => {
+      const nextGenerating = new Map(state.generatingChats);
+      nextGenerating.set(chat.sessionId, chat);
+      return { generatingChats: nextGenerating };
+    });
+  },
+
+  removeGeneratingChat: (sessionId: string) => {
+    set((state) => {
+      if (!state.generatingChats.has(sessionId)) return {};
+      const nextGenerating = new Map(state.generatingChats);
+      nextGenerating.delete(sessionId);
+      return { generatingChats: nextGenerating };
+    });
+  },
+
+  isChatGenerating: (sessionId: string) => {
+    return get().generatingChats.has(sessionId);
+  },
+
   loadChats: async () => {
     set({ isLoadingChats: true });
     try {
@@ -107,6 +133,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           chats: state.chats.map((chat) => (chat.id === chatId ? initializedChat : chat)),
           currentChatSessionId: initializedChat.sessionId,
         }));
+
+        // If there is already an assistant message, clear background-generating flag
+        // if (initializedChat.messages?.some((m) => m.role === 'assistant')) {
+        //   get().removeGeneratingChat(initializedChat.sessionId);
+        // }
       }
     } catch (error) {
       console.error('Failed to load chat messages:', error);

@@ -1,6 +1,7 @@
 import { UIMessage } from 'ai';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import RunningInBackgroundMessage from '@ui/components/Chat/ChatHistory/Messages/RunningInBackgroundMessage';
 import { ScrollArea } from '@ui/components/ui/scroll-area';
 import { cn } from '@ui/lib/utils/tailwind';
 
@@ -12,8 +13,11 @@ const CHAT_SCROLL_AREA_SELECTOR = `#${CHAT_SCROLL_AREA_ID} [data-radix-scroll-ar
 
 interface ChatHistoryProps {
   messages: UIMessage[];
+  chatId: number;
+  sessionId: string;
   editingMessageId: string | null;
   editingContent: string;
+  isRunningInBackground: boolean;
   onEditStart: (messageId: string, content: string) => void;
   onEditCancel: () => void;
   onEditSave: (messageId: string) => void;
@@ -110,6 +114,9 @@ const getMessageClassName = (message: UIMessage) => {
 
 export default function ChatHistory({
   messages,
+  isRunningInBackground,
+  chatId,
+  sessionId,
   editingMessageId,
   editingContent,
   onEditStart,
@@ -218,8 +225,21 @@ export default function ChatHistory({
             <div className="text-xs font-medium mb-1 opacity-70 capitalize text-blue-600 dark:text-blue-400">
               system
             </div>
+
             <div className="overflow-hidden min-w-0">
               <SubmissionLoadingMessage startTime={submissionStartTime} />
+            </div>
+          </div>
+        )}
+
+        {isRunningInBackground && (
+          <div className="p-3 rounded-lg overflow-hidden min-w-0 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800/30 mr-8">
+            <div className="text-xs font-medium mb-1 opacity-70 capitalize text-orange-600 dark:text-orange-400">
+              system
+            </div>
+
+            <div className="overflow-hidden min-w-0">
+              <RunningInBackgroundMessage chatId={chatId} sessionId={sessionId} messages={messages} />
             </div>
           </div>
         )}

@@ -19,6 +19,9 @@ export const Route = createFileRoute('/chat')({
 
 function ChatPage() {
   const { getCurrentChat, getCurrentChatTitle } = useChatStore();
+  const generatingChats = useChatStore((s) => s.generatingChats);
+  const setGeneratingChats = useChatStore((s) => s.setGeneratingChats);
+  const removeGeneratingChat = useChatStore((s) => s.removeGeneratingChat);
   const { selectedToolIds } = useToolsStore();
   const { selectedModel } = useOllamaStore();
   const { availableCloudProviderModels } = useCloudProvidersStore();
@@ -70,11 +73,14 @@ function ChatPage() {
     });
   }, [currentChatSessionId]);
 
-  const { sendMessage, messages, setMessages, stop, status, error, regenerate } = useChat({
+  const { sendMessage, messages, setMessages, stop, status, regenerate } = useChat({
     id: currentChatSessionId || 'temp-id', // use the provided chat ID or a temp ID
     transport,
     onError: (error) => {
       console.error('Chat error:', error);
+      if (currentChatSessionId) {
+        removeGeneratingChat(currentChatSessionId);
+      }
     },
   });
 
@@ -129,6 +135,15 @@ function ChatPage() {
     }
   }, [status, isSubmitting, currentChatSessionId, currentChatTitle, setChatInference]);
 
+  // When streaming finishes and there is an assistant reply, clear background-generating flag
+  useEffect(() => {
+    if (status === 'ready' && currentChatSessionId) {
+      const lastMessage = messages.at(-1);
+      const isLastMessageAssistant = lastMessage?.role === 'assistant';
+      if (isLastMessageAssistant) removeGeneratingChat(currentChatSessionId);
+    }
+  }, [status, currentChatSessionId, messages, removeGeneratingChat]);
+
   useEffect(() => {
     if (isLoading) {
       setIsSubmitting(false);
@@ -147,6 +162,8 @@ function ChatPage() {
       setRegeneratingIndex(null);
     }
   }, [status, regeneratingIndex, fullMessagesBackup]);
+
+  console.log({ generatingChats });
 
   // Clear regenerating state and merge new message when streaming finishes
   useEffect(() => {
@@ -183,7 +200,7 @@ function ChatPage() {
       // Clear messages when no chat or empty chat
       setMessages([]);
     }
-  }, [currentChatSessionId]); // Only depend on session ID to avoid infinite loop
+  }, [currentChatSessionId, currentChatMessages]); // Depend on both session ID and messages
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setLocalInput(e.target.value);
@@ -194,6 +211,10 @@ function ChatPage() {
     if (localInput.trim()) {
       setIsSubmitting(true);
       setSubmissionStartTime(Date.now());
+      if (currentChat) {
+        console.log('setting generating chat', currentChat);
+        setGeneratingChats(currentChat);
+      }
       sendMessage({ text: localInput });
       setLocalInput('');
     }
@@ -202,6 +223,10 @@ function ChatPage() {
   const handlePromptSelect = (prompt: string) => {
     setIsSubmitting(true);
     setSubmissionStartTime(Date.now());
+    if (currentChat) {
+      console.log('setting generating chat', currentChat);
+      setGeneratingChats(currentChat);
+    }
     // Directly send the prompt when a tile is clicked
     sendMessage({ text: prompt });
   };
@@ -214,15 +239,22 @@ function ChatPage() {
   // Check if the chat is empty (no messages)
   const isChatEmpty = messages.length === 0;
 
-  const runningTasks = useStatusBarStore((state) => state.tasks);
-  const isChatGenerating = runningTasks.get(`chat-${currentChatSessionId}`)?.status === 'active';
+  const isChatGenerating = currentChatSessionId ? generatingChats.has(currentChatSessionId) : false;
+
+  const lastMessage = messages.at(-1);
+  const part = lastMessage?.parts[1];
+  const isRunningInBackground =
+    isChatGenerating && lastMessage?.role === 'assistant' && part?.type === 'text' && part.state === 'done';
 
   return (
     <div className="flex flex-col h-full gap-2 max-w-full overflow-hidden">
+      {/* {JSON.stringify({ messages })} */}
+      {JSON.stringify(generatingChats.get(currentChatSessionId))}
+
       {isChatEmpty ? (
         isChatGenerating ? (
           <div className="flex-1 min-h-0 flex items-center justify-center overflow-auto">
-            <GeneratingChatOnBackground />
+            <GeneratingChatOnBackground chatId={currentChat.id} sessionId={currentChatSessionId} messages={messages} />
           </div>
         ) : (
           <div className="flex-1 min-h-0 overflow-auto">
@@ -232,6 +264,9 @@ function ChatPage() {
       ) : (
         <div className="flex-1 min-h-0 overflow-hidden max-w-full">
           <ChatHistory
+            chatId={currentChat.id}
+            sessionId={currentChatSessionId}
+            isRunningInBackground={isRunningInBackground}
             messages={regeneratingIndex !== null && fullMessagesBackup.length > 0 ? fullMessagesBackup : messages}
             editingMessageId={editingMessageId}
             editingContent={editingContent}
@@ -250,6 +285,7 @@ function ChatPage() {
       )}
 
       <SystemPrompt />
+
       <div className="flex-shrink-0">
         <ChatInput
           input={localInput}
