@@ -1,4 +1,4 @@
-import { Send } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useChatStore } from '@ui/stores';
@@ -37,12 +37,12 @@ export default function RunningInBackgroundMessage({ chatId }: RunningInBackgrou
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Send className="h-4 w-4 animate-pulse text-orange-500" />
-        <span className="text-sm text-muted-foreground">Preparing your request{dots}</span>
+        <Clock className="h-4 w-4 text-orange-500" />
+        <span className="text-sm text-muted-foreground">Waiting for response{dots}</span>
       </div>
 
       <p className="text-xs text-muted-foreground">
-        We're running your request in the background and will be ready soon...
+        We're running your request in the background and the response will be ready soon...
       </p>
     </div>
   );

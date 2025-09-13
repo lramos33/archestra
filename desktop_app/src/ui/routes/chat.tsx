@@ -186,10 +186,10 @@ function ChatPage() {
       // Clear messages when no chat or empty chat
       setMessages([]);
     }
-  }, [currentChatSessionId]); // Only depend on session ID to avoid infinite loop
+  }, [currentChatSessionId, currentChatMessages]); // Now also depend on currentChatMessages
 
   // Simple debounce implementation
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const debouncedSaveDraft = useCallback((chatId: number, content: string) => {
     if (debounceRef.current) {
@@ -213,6 +213,7 @@ function ChatPage() {
 
   const handleSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
+    if (isSubmittingDisabled) return;
     if (currentInput.trim() && currentChat) {
       setIsSubmitting(true);
       setSubmissionStartTime(Date.now());
@@ -246,11 +247,16 @@ function ChatPage() {
       const isSecondToLastMessageSameAsPendingPrompt =
         secondToLastMessage?.parts?.[0]?.type === 'text' && secondToLastMessage?.parts?.[0]?.text === pendingPrompt;
       const isLastMessageAssistant = lastMessage?.role === 'assistant';
+
+      console.log({ messages, currentChatSessionId, pendingPrompt });
+
       if (isLastMessageAssistant && isSecondToLastMessageSameAsPendingPrompt) removePendingPrompt(currentChatSessionId);
     }
   }, [status, currentChatSessionId, messages]);
 
   // ================================== //
+
+  const isSubmittingDisabled = !currentInput.trim() || isLoading || isSubmitting || !!pendingPrompt;
 
   if (!currentChat) {
     // TODO: this is a temporary solution, maybe let's make some cool loading animations with a mascot?
@@ -296,7 +302,7 @@ function ChatPage() {
           handleInputChange={handleInputChange}
           handleSubmit={handleSubmit}
           isLoading={isLoading}
-          isSubmitting={isSubmitting}
+          disabled={isSubmittingDisabled}
           stop={stop}
         />
       </div>
