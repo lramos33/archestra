@@ -81,6 +81,29 @@ function ChatPage() {
     },
   });
 
+  // ================ Running on background logic ================ //
+  const pendingPrompts = useChatStore((s) => s.pendingPrompts);
+  const setPendingPrompts = useChatStore((s) => s.setPendingPrompts);
+  const removePendingPrompt = useChatStore((s) => s.removePendingPrompt);
+
+  const pendingPrompt = pendingPrompts.get(currentChatSessionId);
+
+  // When streaming finishes and there is an assistant reply and the second to
+  // last message is the same as the pending prompt, remove the pending prompt
+  useEffect(() => {
+    if (status === 'ready' && currentChatSessionId) {
+      const secondToLastMessage = messages.at(-2);
+      const lastMessage = messages.at(-1);
+
+      const isSecondToLastMessageSameAsPendingPrompt =
+        secondToLastMessage?.parts?.[0]?.type === 'text' && secondToLastMessage?.parts?.[0]?.text === pendingPrompt;
+      const isLastMessageAssistant = lastMessage?.role === 'assistant';
+
+      if (isLastMessageAssistant && isSecondToLastMessageSameAsPendingPrompt) removePendingPrompt(currentChatSessionId);
+    }
+  }, [status, currentChatSessionId, messages]);
+  // ================================== //
+
   const isLoading = status === 'streaming';
   const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null);
   const [fullMessagesBackup, setFullMessagesBackup] = useState<UIMessage[]>([]);
@@ -229,32 +252,6 @@ function ChatPage() {
     // Directly send the prompt when a tile is clicked
     sendMessage({ text: prompt });
   };
-
-  // ================ Running on background logic ================ //
-  const pendingPrompts = useChatStore((s) => s.pendingPrompts);
-  const setPendingPrompts = useChatStore((s) => s.setPendingPrompts);
-  const removePendingPrompt = useChatStore((s) => s.removePendingPrompt);
-
-  const pendingPrompt = pendingPrompts.get(currentChatSessionId);
-
-  // When streaming finishes and there is an assistant reply and the second to
-  // last message is the same as the pending prompt, remove the pending prompt
-  useEffect(() => {
-    if (status === 'ready' && currentChatSessionId) {
-      const secondToLastMessage = messages.at(-2);
-      const lastMessage = messages.at(-1);
-
-      const isSecondToLastMessageSameAsPendingPrompt =
-        secondToLastMessage?.parts?.[0]?.type === 'text' && secondToLastMessage?.parts?.[0]?.text === pendingPrompt;
-      const isLastMessageAssistant = lastMessage?.role === 'assistant';
-
-      console.log({ messages, currentChatSessionId, pendingPrompt });
-
-      if (isLastMessageAssistant && isSecondToLastMessageSameAsPendingPrompt) removePendingPrompt(currentChatSessionId);
-    }
-  }, [status, currentChatSessionId, messages]);
-
-  // ================================== //
 
   const isSubmittingDisabled = !currentInput.trim() || isLoading || isSubmitting || !!pendingPrompt;
 

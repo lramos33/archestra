@@ -224,21 +224,13 @@ export default function ChatHistory({
         ))}
 
         {pendingPrompt && !hasSamePromptInMessages && (
-          <div className={cn('p-3 rounded-lg overflow-hidden min-w-0', getMessageClassName('user'), 'bg-red-500')}>
+          <div className={cn('p-3 rounded-lg overflow-hidden min-w-0', getMessageClassName('user'))}>
             <div className="text-xs font-medium mb-1 opacity-70 capitalize">user</div>
             <div className="overflow-hidden min-w-0">
               <UserMessage
                 message={
                   { id: 'pending-prompt', role: 'user', parts: [{ type: 'text', text: pendingPrompt }] } as UIMessage
                 }
-                key="pending-prompt"
-                isEditing={false}
-                editingContent=""
-                onEditStart={() => {}}
-                onEditCancel={() => {}}
-                onEditSave={() => {}}
-                onEditChange={() => {}}
-                onDelete={() => {}}
               />
             </div>
           </div>
