@@ -1,14 +1,12 @@
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, UIMessage } from 'ai';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { UIMessage } from 'ai';
+import { createContext, useContext } from 'react';
 
-import config from '@ui/config';
-import { useMessageActions } from '@ui/hooks/useMessageActions';
-import { getAllMemories } from '@ui/lib/clients/archestra/api/gen';
-import { useChatStore, useCloudProvidersStore, useOllamaStore, useToolsStore } from '@ui/stores';
-import { useStatusBarStore } from '@ui/stores/status-bar-store';
+import { useChatStore } from '@ui/stores';
+
+import { ChatInstance, MultiChatManagerProvider, useMultiChatManager } from './multi-chat-manager';
 
 interface IChatAgentContext {
+  // Current chat (backwards compatibility)
   messages: UIMessage[];
   setMessages: (msgs: UIMessage[]) => void;
   sendMessage: (args: { text: string }) => void;
@@ -41,218 +39,119 @@ interface IChatAgentContext {
   hasLoadedMemories: boolean;
   setHasLoadedMemories: (b: boolean) => void;
   loadMemoriesIfNeeded: () => Promise<void>;
+
+  // Multi-chat support
+  getChatInstance: (sessionId: string) => ChatInstance | null;
+  getAllChatInstances: () => Map<string, ChatInstance>;
+  createChatInstance: (sessionId: string, chatId: number, title: string) => void;
+  removeChatInstance: (sessionId: string) => void;
+  getActiveChatInstances: () => ChatInstance[];
 }
 
 const ChatAgentContext = createContext({} as IChatAgentContext);
 
-export function ChatAgentProvider({ children }: { children: React.ReactNode }) {
-  // --- Copied from chat.tsx ---
-  const { getCurrentChat, getCurrentChatTitle } = useChatStore();
-  const { selectedToolIds } = useToolsStore();
-  const { selectedModel } = useOllamaStore();
-  const { availableCloudProviderModels } = useCloudProvidersStore();
-  const { setChatInference } = useStatusBarStore();
-  const [hasTooManyTools, setHasTooManyTools] = useState(false);
-  const [hasLoadedMemories, setHasLoadedMemories] = useState(false);
+function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
+  const { getCurrentChat, getCurrentChatTitle, setPendingPrompts, removePendingPrompt } = useChatStore();
+  const multiChatManager = useMultiChatManager();
 
+  // Current chat info
   const currentChat = getCurrentChat();
   const currentChatSessionId = currentChat?.sessionId || '';
-  const currentChatMessages = currentChat?.messages || [];
   const currentChatTitle = getCurrentChatTitle();
 
-  // Refs for transport
-  const selectedModelRef = useRef(selectedModel);
-  selectedModelRef.current = selectedModel;
-  const availableCloudProviderModelsRef = useRef(availableCloudProviderModels);
-  availableCloudProviderModelsRef.current = availableCloudProviderModels;
-  const selectedToolIdsRef = useRef(selectedToolIds);
-  selectedToolIdsRef.current = selectedToolIds;
+  // Get current chat instance from multi-chat manager
+  const currentChatInstance = multiChatManager.getCurrentChatInstance();
 
-  const transport = useMemo(() => {
-    const apiEndpoint = `${config.archestra.chatStreamBaseUrl}/stream`;
-    return new DefaultChatTransport({
-      api: apiEndpoint,
-      prepareSendMessagesRequest: ({ id, messages }) => {
-        const currentModel = selectedModelRef.current;
-        const currentCloudProviderModels = availableCloudProviderModelsRef.current;
-        const currentChat = getCurrentChat();
-        const cloudModel = currentCloudProviderModels.find((m) => m.id === currentModel);
-        const provider = cloudModel ? cloudModel.provider : 'ollama';
-        return {
-          body: {
-            messages,
-            model: currentModel || 'llama3.1:8b',
-            sessionId: id || currentChatSessionId,
-            provider: provider,
-            chatId: currentChat?.id,
-            toolChoice: 'auto',
-          },
-        };
-      },
-    });
-  }, [currentChatSessionId, getCurrentChat]);
-
-  const { sendMessage, messages, setMessages, stop, status, regenerate } = useChat({
-    id: currentChatSessionId || 'temp-id',
-    transport,
-    onError: (error) => {
-      console.error('Chat error:', error);
-    },
-  });
-
-  // Pending prompts logic
-  const pendingPrompts = useChatStore((s) => s.pendingPrompts);
-  const setPendingPrompts = useChatStore((s) => s.setPendingPrompts);
-  const removePendingPrompt = useChatStore((s) => s.removePendingPrompt);
-  const pendingPrompt = pendingPrompts.get(currentChatSessionId);
-
-  // Regeneration logic
-  const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null);
-  const [fullMessagesBackup, setFullMessagesBackup] = useState<UIMessage[]>([]);
-
-  // Submission state
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionStartTime, setSubmissionStartTime] = useState<number>(Date.now());
-
-  // Message actions
-  const { editingMessageId, editingContent, setEditingContent, startEdit, cancelEdit, saveEdit, deleteMessage } =
-    useMessageActions({
-      messages,
-      setMessages,
-      sendMessage,
-      sessionId: currentChatSessionId,
-    });
-
-  // Patch handlers to match expected signatures for ChatHistory
-  const handleEditStart = (messageId: string, content: string) => startEdit(messageId, content);
-  const handleEditSave = (messageId: string) => saveEdit(messageId);
-  const handleDeleteMessage = (messageId: string) => deleteMessage(messageId);
-
-  // Regenerate handler
-  const handleRegenerateMessage = async (messageIndex: number) => {
-    const messageToRegenerate = messages[messageIndex];
-    if (!messageToRegenerate || messageToRegenerate.role !== 'assistant') return;
-    setRegeneratingIndex(messageIndex);
-    setFullMessagesBackup(messages);
-    const conversationUpToAssistant = messages.slice(0, messageIndex + 1);
-    setMessages(conversationUpToAssistant);
-    regenerate();
+  // For backwards compatibility, provide current chat values
+  const currentValues = currentChatInstance || {
+    messages: [],
+    setMessages: () => {},
+    sendMessage: () => {},
+    stop: () => {},
+    status: 'ready',
+    regenerate: () => {},
+    isLoading: false,
+    isSubmitting: false,
+    setIsSubmitting: () => {},
+    submissionStartTime: Date.now(),
+    setSubmissionStartTime: () => {},
+    editingMessageId: null,
+    editingContent: '',
+    setEditingContent: () => {},
+    startEdit: () => {},
+    cancelEdit: () => {},
+    saveEdit: () => {},
+    deleteMessage: () => {},
+    handleRegenerateMessage: async () => {},
+    regeneratingIndex: null,
+    fullMessagesBackup: [],
+    pendingPrompt: undefined,
+    hasTooManyTools: false,
+    setHasTooManyTools: () => {},
+    hasLoadedMemories: false,
+    setHasLoadedMemories: () => {},
+    loadMemoriesIfNeeded: async () => {},
   };
 
-  // StatusBar inference
-  useEffect(() => {
-    if (status === 'streaming' || isSubmitting) {
-      setChatInference(currentChatSessionId, currentChatTitle, true);
-    } else if (status === 'ready' || status === 'error') {
-      setChatInference(currentChatSessionId, currentChatTitle, false);
-    }
-  }, [status, isSubmitting, currentChatSessionId, currentChatTitle, setChatInference]);
-
-  // Submission state reset
-  useEffect(() => {
-    if (status === 'streaming') setIsSubmitting(false);
-  }, [status]);
-  useEffect(() => {
-    if (status === 'ready' || status === 'error') setIsSubmitting(false);
-    if (status === 'error' && regeneratingIndex !== null && fullMessagesBackup.length > 0) {
-      setMessages(fullMessagesBackup);
-      setFullMessagesBackup([]);
-      setRegeneratingIndex(null);
-    }
-  }, [status, regeneratingIndex, fullMessagesBackup]);
-
-  // Regeneration merge
-  useEffect(() => {
-    if (status === 'ready' && regeneratingIndex !== null && fullMessagesBackup.length > 0) {
-      const newRegeneratedMessage = messages[messages.length - 1];
-      if (newRegeneratedMessage && regeneratingIndex < fullMessagesBackup.length) {
-        const updatedMessages = [...fullMessagesBackup];
-        updatedMessages[regeneratingIndex] = newRegeneratedMessage;
-        setMessages(updatedMessages);
-      } else {
-        setMessages(fullMessagesBackup);
-      }
-      setFullMessagesBackup([]);
-      setRegeneratingIndex(null);
-    } else if (status === 'ready' && regeneratingIndex !== null) {
-      setRegeneratingIndex(null);
-    }
-  }, [status, regeneratingIndex, fullMessagesBackup, messages]);
-
-  // Load messages from DB when chat changes
-  useEffect(() => {
-    if (currentChat && currentChatSessionId) {
-      if (currentChatMessages && currentChatMessages.length > 0) {
-        setMessages(currentChatMessages);
-      } else {
-        setMessages([]);
-      }
-    }
-  }, [currentChatSessionId, currentChatMessages, currentChat]);
-
-  // Memories loader
-  const loadMemoriesIfNeeded = useCallback(async () => {
-    if (messages.length === 0 && !hasLoadedMemories) {
-      try {
-        const { data } = await getAllMemories();
-        if (data && data.memories && data.memories.length > 0) {
-          const memoriesText = data.memories.map((m) => `${m.name}: ${m.value}`).join('\n');
-          // Add a system message with the memories
-          const systemMessage: UIMessage = {
-            id: 'system-memories',
-            role: 'system',
-            parts: [{ type: 'text', text: `Previous memories loaded:\n${memoriesText}` }],
-          };
-          setMessages([systemMessage]);
-        }
-        setHasLoadedMemories(true);
-      } catch (error) {
-        setHasLoadedMemories(true);
-      }
-    }
-  }, [messages, hasLoadedMemories]);
-
-  const isLoading = status === 'streaming';
+  const pendingPrompts = useChatStore((s) => s.pendingPrompts);
+  const pendingPrompt = pendingPrompts.get(currentChatSessionId);
 
   return (
     <ChatAgentContext.Provider
       value={{
-        messages,
-        setMessages,
-        sendMessage,
-        stop,
-        status,
-        regenerate,
-        isLoading,
-        isSubmitting,
-        setIsSubmitting,
-        submissionStartTime,
-        setSubmissionStartTime,
-        editingMessageId,
-        editingContent,
-        setEditingContent,
-        startEdit: handleEditStart,
-        cancelEdit,
-        saveEdit: handleEditSave,
-        deleteMessage: handleDeleteMessage,
-        handleRegenerateMessage,
-        regeneratingIndex,
-        fullMessagesBackup,
+        // Current chat values for backwards compatibility
+        messages: currentValues.messages,
+        setMessages: currentValues.setMessages,
+        sendMessage: currentValues.sendMessage,
+        stop: currentValues.stop,
+        status: currentValues.status,
+        regenerate: currentValues.regenerate,
+        isLoading: currentValues.isLoading,
+        isSubmitting: currentValues.isSubmitting,
+        setIsSubmitting: currentValues.setIsSubmitting,
+        submissionStartTime: currentValues.submissionStartTime,
+        setSubmissionStartTime: currentValues.setSubmissionStartTime,
+        editingMessageId: currentValues.editingMessageId,
+        editingContent: currentValues.editingContent,
+        setEditingContent: currentValues.setEditingContent,
+        startEdit: currentValues.startEdit,
+        cancelEdit: currentValues.cancelEdit,
+        saveEdit: currentValues.saveEdit,
+        deleteMessage: currentValues.deleteMessage,
+        handleRegenerateMessage: currentValues.handleRegenerateMessage,
+        regeneratingIndex: currentValues.regeneratingIndex,
+        fullMessagesBackup: currentValues.fullMessagesBackup,
         currentChatSessionId,
         currentChat,
         currentChatTitle,
         pendingPrompt,
         setPendingPrompts,
         removePendingPrompt,
-        hasTooManyTools,
-        setHasTooManyTools,
-        hasLoadedMemories,
-        setHasLoadedMemories,
-        loadMemoriesIfNeeded,
+        hasTooManyTools: currentValues.hasTooManyTools,
+        setHasTooManyTools: currentValues.setHasTooManyTools,
+        hasLoadedMemories: currentValues.hasLoadedMemories,
+        setHasLoadedMemories: currentValues.setHasLoadedMemories,
+        loadMemoriesIfNeeded: currentValues.loadMemoriesIfNeeded,
+
+        // Multi-chat support
+        getChatInstance: multiChatManager.getChatInstance,
+        getAllChatInstances: multiChatManager.getAllChatInstances,
+        createChatInstance: multiChatManager.createChatInstance,
+        removeChatInstance: multiChatManager.removeChatInstance,
+        getActiveChatInstances: multiChatManager.getActiveChatInstances,
       }}
     >
       {children}
     </ChatAgentContext.Provider>
+  );
+}
+
+// Main provider that wraps both the multi-chat manager and the chat agent context
+export function ChatAgentProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <MultiChatManagerProvider>
+      <ChatAgentContextProvider>{children}</ChatAgentContextProvider>
+    </MultiChatManagerProvider>
   );
 }
 
