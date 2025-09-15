@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { ThemeToggler } from '@ui/components/ThemeToggler';
 import { Button } from '@ui/components/ui/button';
 import { useSidebar } from '@ui/components/ui/sidebar';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@ui/components/ui/tooltip';
 import { useChatStore } from '@ui/stores';
 
 import { Breadcrumbs } from './Breadcrumbs';
@@ -129,26 +128,21 @@ What actually happened?
         >
           <SidebarIcon />
         </Button>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <Button
-                className="h-8 cursor-not-allowed opacity-50 hidden sm:flex"
-                variant="ghost"
-                size="sm"
-                disabled
-                // @ts-expect-error - WebkitAppRegion is not a valid property
-                style={{ WebkitAppRegion: 'no-drag' }}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                <span className="hidden lg:inline">New Agent</span>
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Sorry, it's an early alpha version, parallel agents are under development. Check back soon!</p>
-          </TooltipContent>
-        </Tooltip>
+
+        <Button
+          className="hidden sm:flex"
+          variant="ghost"
+          size="sm"
+          onClick={async () => {
+            await createNewChat();
+            navigate({ to: '/chat' });
+          }}
+          // @ts-expect-error - WebkitAppRegion is not a valid property
+          style={{ WebkitAppRegion: 'no-drag' }}
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          <span className="hidden lg:inline">New Agent</span>
+        </Button>
       </div>
       <div
         className="flex h-[var(--header-height)] flex-1 items-center justify-between px-2 sm:px-4 min-w-0 overflow-hidden"
