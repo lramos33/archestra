@@ -119,6 +119,7 @@ function ChatInstanceManager({
     onError: (error) => {
       console.error('Chat error:', error);
     },
+    messages: initialMessages,
   });
 
   // Regeneration logic
@@ -412,6 +413,8 @@ export function MultiChatManagerProvider({ children }: { children: React.ReactNo
       {Array.from(requestedInstances).map((sessionId) => {
         const chat = useChatStore.getState().chats.find((c) => c.sessionId === sessionId);
         if (!chat) return null;
+
+        console.log({ messages: chat.messages });
 
         return (
           <ChatInstanceManager
