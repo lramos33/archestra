@@ -31,9 +31,6 @@ interface IChatAgentContext {
   currentChatSessionId: string;
   currentChat: any;
   currentChatTitle: string;
-  pendingPrompt: string | undefined;
-  setPendingPrompts: (id: string, prompt: string) => void;
-  removePendingPrompt: (id: string) => void;
   hasTooManyTools: boolean;
   setHasTooManyTools: (b: boolean) => void;
   hasLoadedMemories: boolean;
@@ -51,7 +48,7 @@ interface IChatAgentContext {
 const ChatAgentContext = createContext({} as IChatAgentContext);
 
 function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
-  const { getCurrentChat, getCurrentChatTitle, setPendingPrompts, removePendingPrompt } = useChatStore();
+  const { getCurrentChat, getCurrentChatTitle } = useChatStore();
   const multiChatManager = useMultiChatManager();
 
   // Current chat info
@@ -85,16 +82,12 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
     handleRegenerateMessage: async () => {},
     regeneratingIndex: null,
     fullMessagesBackup: [],
-    pendingPrompt: undefined,
     hasTooManyTools: false,
     setHasTooManyTools: () => {},
     hasLoadedMemories: false,
     setHasLoadedMemories: () => {},
     loadMemoriesIfNeeded: async () => {},
   };
-
-  const pendingPrompts = useChatStore((s) => s.pendingPrompts);
-  const pendingPrompt = pendingPrompts.get(currentChatSessionId);
 
   return (
     <ChatAgentContext.Provider
@@ -124,9 +117,6 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
         currentChatSessionId,
         currentChat,
         currentChatTitle,
-        pendingPrompt,
-        setPendingPrompts,
-        removePendingPrompt,
         hasTooManyTools: currentValues.hasTooManyTools,
         setHasTooManyTools: currentValues.setHasTooManyTools,
         hasLoadedMemories: currentValues.hasLoadedMemories,

@@ -40,8 +40,6 @@ function ChatPage() {
     currentChatSessionId,
     currentChat,
     currentChatTitle,
-    pendingPrompt,
-    setPendingPrompts,
     hasTooManyTools,
     setHasTooManyTools,
     hasLoadedMemories,
@@ -83,7 +81,6 @@ function ChatPage() {
       setIsSubmitting(true);
       setSubmissionStartTime(Date.now());
       sendMessage({ text: messageText });
-      setPendingPrompts(currentChatSessionId, messageText);
       clearDraftMessage(currentChat.id);
     }
   };
@@ -111,10 +108,9 @@ function ChatPage() {
     setIsSubmitting(true);
     setSubmissionStartTime(Date.now());
     sendMessage({ text: messageText });
-    if (currentChat) setPendingPrompts(currentChatSessionId, messageText);
   };
 
-  const isSubmittingDisabled = !currentInput.trim() || isLoading || isSubmitting || !!pendingPrompt;
+  const isSubmittingDisabled = !currentInput.trim() || isLoading || isSubmitting;
 
   // if (!currentChat) return null;
   const isChatEmpty = messages.length === 0;
@@ -142,7 +138,7 @@ function ChatPage() {
     <div className="flex flex-col h-full gap-2 max-w-full overflow-hidden">
       {/* <p>{JSON.stringify(messages)}</p> */}
 
-      {isChatEmpty && !pendingPrompt ? (
+      {isChatEmpty ? (
         <div className="flex-1 min-h-0 overflow-auto">
           <EmptyChatState onPromptSelect={handlePromptSelect} />
         </div>
@@ -150,7 +146,6 @@ function ChatPage() {
         <div className="flex-1 min-h-0 overflow-hidden max-w-full">
           <ChatHistory
             chatId={currentChat.id}
-            pendingPrompt={pendingPrompt}
             sessionId={currentChatSessionId}
             messages={regeneratingIndex !== null && fullMessagesBackup.length > 0 ? fullMessagesBackup : messages}
             editingMessageId={editingMessageId}

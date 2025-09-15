@@ -7,7 +7,6 @@ import {
   getChatById,
   getChatSelectedTools,
   getChats,
-  selectChatTools,
   updateChat,
 } from '@ui/lib/clients/archestra/api/gen';
 import { initializeChat } from '@ui/lib/utils/chat';
@@ -20,7 +19,6 @@ interface ChatState {
   chats: ChatWithMessages[];
   currentChatSessionId: string | null;
   isLoadingChats: boolean;
-  pendingPrompts: Map<string, string>;
   draftMessages: Map<number, string>; // chatId -> draft content
 }
 
@@ -33,8 +31,6 @@ interface ChatActions {
   deleteCurrentChat: () => Promise<void>;
   updateChatTitle: (chatId: number, title: string) => Promise<void>;
   initializeStore: () => Promise<void>;
-  setPendingPrompts: (sessionId: string, prompt: string) => void;
-  removePendingPrompt: (sessionId: string) => void;
   saveDraftMessage: (chatId: number, content: string) => void;
   getDraftMessage: (chatId: number) => string;
   clearDraftMessage: (chatId: number) => void;
@@ -59,23 +55,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   chats: [],
   currentChatSessionId: null,
   isLoadingChats: false,
-  pendingPrompts: new Map<string, string>(),
 
-  setPendingPrompts: (sessionId: string, prompt: string) => {
-    set((state) => {
-      const nextPendingPrompts = new Map(state.pendingPrompts);
-      nextPendingPrompts.set(sessionId, prompt);
-      return { pendingPrompts: nextPendingPrompts };
-    });
-  },
-
-  removePendingPrompt: (sessionId: string) => {
-    set((state) => {
-      const nextPendingPrompts = new Map(state.pendingPrompts);
-      nextPendingPrompts.delete(sessionId);
-      return { pendingPrompts: nextPendingPrompts };
-    });
-  },
   draftMessages: new Map(),
 
   loadChats: async () => {
