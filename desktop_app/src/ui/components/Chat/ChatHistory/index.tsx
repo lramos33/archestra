@@ -1,7 +1,6 @@
 import { UIMessage } from 'ai';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import RunningInBackgroundMessage from '@ui/components/Chat/ChatHistory/Messages/RunningInBackgroundMessage';
 import { ScrollArea } from '@ui/components/ui/scroll-area';
 import { cn } from '@ui/lib/utils/tailwind';
 
@@ -223,7 +222,7 @@ export default function ChatHistory({
           </div>
         ))}
 
-        {pendingPrompt && !hasSamePromptInMessages && (
+        {/* {pendingPrompt && !hasSamePromptInMessages && (
           <div className={cn('p-3 rounded-lg overflow-hidden min-w-0', getMessageClassName('user'))}>
             <div className="text-xs font-medium mb-1 opacity-70 capitalize">user</div>
             <div className="overflow-hidden min-w-0">
@@ -246,7 +245,7 @@ export default function ChatHistory({
               <RunningInBackgroundMessage chatId={chatId} />
             </div>
           </div>
-        )}
+        )} */}
 
         {isSubmitting && !isRegenerating && (
           <div className="p-3 rounded-lg overflow-hidden min-w-0 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/30 mr-8">
