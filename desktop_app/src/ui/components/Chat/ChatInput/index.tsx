@@ -39,6 +39,7 @@ interface ChatInputProps {
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
+  isPreparing: boolean;
   disabled: boolean;
   stop: () => void;
   hasMessages?: boolean;
@@ -63,6 +64,7 @@ export default function ChatInput({
   handleInputChange,
   handleSubmit,
   isLoading,
+  isPreparing,
   disabled,
   stop,
   hasMessages = false,
@@ -628,9 +630,16 @@ export default function ChatInput({
 
           <div className="flex items-center gap-2">
             {isLoading && (
+              <div className="flex items-center gap-2 px-2.5 py-1 bg-green-500/10 rounded-full border border-green-500/20 group">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-xs font-medium text-green-600 dark:text-green-400">Streaming</span>
+              </div>
+            )}
+
+            {isPreparing && (
               <div className="flex items-center gap-2 px-2.5 py-1 bg-blue-500/10 rounded-full border border-blue-500/20 group">
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">Streaming</span>
+                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">Preparing</span>
               </div>
             )}
 

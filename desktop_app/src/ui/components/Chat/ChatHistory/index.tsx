@@ -5,7 +5,6 @@ import { ScrollArea } from '@ui/components/ui/scroll-area';
 import { cn } from '@ui/lib/utils/tailwind';
 
 import { AssistantMessage, MemoriesMessage, OtherMessage, UserMessage } from './Messages';
-import SubmissionLoadingMessage from './Messages/SubmissionLoadingMessage';
 
 const CHAT_SCROLL_AREA_ID = 'chat-scroll-area';
 const CHAT_SCROLL_AREA_SELECTOR = `#${CHAT_SCROLL_AREA_ID} [data-radix-scroll-area-viewport]`;
@@ -25,7 +24,6 @@ interface ChatHistoryProps {
   isRegenerating?: boolean;
   regeneratingIndex?: number | null;
   isSubmitting?: boolean;
-  submissionStartTime?: number;
 }
 
 interface MessageProps {
@@ -127,7 +125,6 @@ export default function ChatHistory({
   isRegenerating,
   regeneratingIndex,
   isSubmitting,
-  submissionStartTime,
 }: ChatHistoryProps) {
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const scrollAreaRef = useRef<HTMLElement | null>(null);
@@ -225,18 +222,6 @@ export default function ChatHistory({
             </div>
           </div>
         ))}
-
-        {isSubmitting && !isRegenerating && (
-          <div className="p-3 rounded-lg overflow-hidden min-w-0 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/30 mr-8">
-            <div className="text-xs font-medium mb-1 opacity-70 capitalize text-blue-600 dark:text-blue-400">
-              system
-            </div>
-
-            <div className="overflow-hidden min-w-0">
-              <SubmissionLoadingMessage startTime={submissionStartTime} />
-            </div>
-          </div>
-        )}
       </div>
     </ScrollArea>
   );

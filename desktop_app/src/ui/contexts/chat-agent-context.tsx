@@ -15,8 +15,6 @@ interface IChatAgentContext {
   isLoading: boolean;
   isSubmitting: boolean;
   setIsSubmitting: (b: boolean) => void;
-  submissionStartTime: number;
-  setSubmissionStartTime: (n: number) => void;
   editingMessageId: string | null;
   editingContent: string;
   setEditingContent: (c: string) => void;
@@ -58,8 +56,6 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
     isLoading: false,
     isSubmitting: false,
     setIsSubmitting: () => {},
-    submissionStartTime: Date.now(),
-    setSubmissionStartTime: () => {},
     editingMessageId: null,
     editingContent: '',
     setEditingContent: () => {},
@@ -89,8 +85,6 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
         isLoading: currentValues.isLoading,
         isSubmitting: currentValues.isSubmitting,
         setIsSubmitting: currentValues.setIsSubmitting,
-        submissionStartTime: currentValues.submissionStartTime,
-        setSubmissionStartTime: currentValues.setSubmissionStartTime,
         editingMessageId: currentValues.editingMessageId,
         editingContent: currentValues.editingContent,
         setEditingContent: currentValues.setEditingContent,

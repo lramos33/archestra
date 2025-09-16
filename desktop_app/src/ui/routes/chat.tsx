@@ -22,8 +22,6 @@ function ChatPage() {
     isLoading,
     isSubmitting,
     setIsSubmitting,
-    submissionStartTime,
-    setSubmissionStartTime,
     editingMessageId,
     editingContent,
     setEditingContent,
@@ -87,7 +85,6 @@ function ChatPage() {
         messageText = `You currently have only list_available_tools and enable_tools enabled. Follow these steps:\n1. Call list_available_tools to see all available tool IDs\n2. Call enable_tools with the specific tool IDs you need, for example: {"toolIds": ["filesystem__read_file", "filesystem__write_file"]}\n3. After enabling the necessary tools, disable Archestra tools using disable_tools.\n4. After, proceed with this task: \n\n${currentInput}`;
       }
       setIsSubmitting(true);
-      setSubmissionStartTime(Date.now());
       sendMessage({ text: messageText });
       clearDraftMessage(currentChat.id);
     }
@@ -96,7 +93,6 @@ function ChatPage() {
   const handlePromptSelect = async (prompt: string) => {
     await loadMemoriesIfNeeded();
     setIsSubmitting(true);
-    setSubmissionStartTime(Date.now());
     sendMessage({ text: prompt });
   };
 
@@ -120,7 +116,6 @@ function ChatPage() {
 
     // Re-run with the first user message
     setIsSubmitting(true);
-    setSubmissionStartTime(Date.now());
     sendMessage({ text: messageText });
   };
 
@@ -138,6 +133,7 @@ function ChatPage() {
           input=""
           disabled={true}
           isLoading={false}
+          isPreparing={false}
           handleInputChange={() => {}}
           handleSubmit={() => {}}
           stop={() => {}}
@@ -146,6 +142,9 @@ function ChatPage() {
       </div>
     );
   }
+
+  const isRegenerating = regeneratingIndex !== null || isLoading;
+  const isPreparing = isSubmitting && !isRegenerating;
 
   return (
     <div className="flex flex-col h-full gap-2 max-w-full overflow-hidden">
@@ -167,10 +166,9 @@ function ChatPage() {
             onEditChange={setEditingContent}
             onDeleteMessage={deleteMessage}
             onRegenerateMessage={handleRegenerateMessage}
-            isRegenerating={regeneratingIndex !== null || isLoading}
+            isRegenerating={isRegenerating}
             regeneratingIndex={regeneratingIndex}
             isSubmitting={isSubmitting}
-            submissionStartTime={submissionStartTime}
           />
         </div>
       )}
@@ -183,6 +181,7 @@ function ChatPage() {
           handleInputChange={handleInputChange}
           handleSubmit={handleSubmit}
           isLoading={isLoading}
+          isPreparing={isPreparing}
           disabled={isSubmittingDisabled}
           stop={stop}
           hasMessages={messages.length > 0}

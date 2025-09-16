@@ -16,7 +16,6 @@ interface ChatInstanceState {
   status: string;
   isLoading: boolean;
   isSubmitting: boolean;
-  submissionStartTime: number;
   editingMessageId: string | null;
   editingContent: string;
   regeneratingIndex: number | null;
@@ -31,7 +30,6 @@ interface ChatInstanceActions {
   stop: () => void;
   regenerate: () => void;
   setIsSubmitting: (b: boolean) => void;
-  setSubmissionStartTime: (n: number) => void;
   setEditingContent: (c: string) => void;
   startEdit: (id: string, content: string) => void;
   cancelEdit: () => void;
@@ -47,6 +45,7 @@ export type ChatInstance = ChatInstanceState & ChatInstanceActions;
 
 interface MultiChatManagerContextType {
   getCurrentChatInstance: () => ChatInstance | null;
+  getChatInstance: (sessionId: string) => ChatInstance | null;
 }
 
 const MultiChatManagerContext = createContext<MultiChatManagerContextType | null>(null);
@@ -119,7 +118,6 @@ function ChatInstanceManager({
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionStartTime, setSubmissionStartTime] = useState<number>(Date.now());
 
   // Message actions
   const { editingMessageId, editingContent, setEditingContent, startEdit, cancelEdit, saveEdit, deleteMessage } =
@@ -213,7 +211,6 @@ function ChatInstanceManager({
       stop,
       regenerate,
       setIsSubmitting,
-      setSubmissionStartTime,
       setEditingContent,
       startEdit,
       cancelEdit,
@@ -230,7 +227,6 @@ function ChatInstanceManager({
       stop,
       regenerate,
       setIsSubmitting,
-      setSubmissionStartTime,
       setEditingContent,
       startEdit,
       cancelEdit,
@@ -252,7 +248,6 @@ function ChatInstanceManager({
       status,
       isLoading,
       isSubmitting,
-      submissionStartTime,
       editingMessageId,
       editingContent,
       regeneratingIndex,
@@ -269,7 +264,6 @@ function ChatInstanceManager({
       status,
       isLoading,
       isSubmitting,
-      submissionStartTime,
       editingMessageId,
       editingContent,
       regeneratingIndex,
@@ -350,10 +344,18 @@ export function MultiChatManagerProvider({ children }: { children: React.ReactNo
     return chatInstances.get(currentChatSessionId) || null;
   }, [chatInstances, currentChatSessionId]);
 
+  const getChatInstance = useCallback(
+    (sessionId: string) => {
+      return chatInstances.get(sessionId) || null;
+    },
+    [chatInstances]
+  );
+
   return (
     <MultiChatManagerContext.Provider
       value={{
         getCurrentChatInstance,
+        getChatInstance,
       }}
     >
       {Array.from(requestedInstances).map((sessionId) => {
