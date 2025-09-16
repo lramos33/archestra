@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import ChatHistory from '@ui/components/Chat/ChatHistory';
 import ChatInput from '@ui/components/Chat/ChatInput';
@@ -17,7 +17,6 @@ function ChatPage() {
   const { setOnlyTools } = useToolsStore();
   const {
     messages,
-    setMessages,
     sendMessage,
     stop,
     isLoading,
@@ -37,14 +36,21 @@ function ChatPage() {
     fullMessagesBackup,
     currentChatSessionId,
     currentChat,
+    currentChatTitle,
     hasTooManyTools,
     setHasTooManyTools,
+    hasLoadedMemories,
     setHasLoadedMemories,
     loadMemoriesIfNeeded,
   } = useChatAgent();
 
   // Get current input from draft messages
   const currentInput = currentChat ? getDraftMessage(currentChat.id) : '';
+
+  // Reset memory loading flag when chat changes
+  useEffect(() => {
+    setHasLoadedMemories(false);
+  }, [currentChatSessionId, setHasLoadedMemories]);
 
   // Simple debounce implementation
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -54,6 +60,15 @@ function ChatPage() {
       // This could be used for future persistence to localStorage or server
       console.log('Debounced save draft:', { chatId, contentLength: content.length });
     }, 500);
+  }, []);
+
+  // Cleanup timeout on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -91,16 +106,22 @@ function ChatPage() {
   const handleRerunAgent = async () => {
     const firstUserMessage = messages.find((msg) => msg.role === 'user');
     if (!firstUserMessage) return;
+
     // Extract text from message.parts for rerun logic
     let messageText = '';
-    if ((firstUserMessage as any).parts) {
-      const textPart = (firstUserMessage as any).parts.find((part: any) => part.type === 'text');
-      if (textPart?.text) messageText = textPart.text;
+    if (firstUserMessage.parts) {
+      const textPart = firstUserMessage.parts.find((part) => part.type === 'text');
+      if (textPart && 'text' in textPart) {
+        messageText = textPart.text;
+      }
     }
     if (!messageText) return;
-    setMessages([]);
+
+    // Reset memory loading flags to load memories again
     setHasLoadedMemories(false);
     await loadMemoriesIfNeeded();
+
+    // Re-run with the first user message
     setIsSubmitting(true);
     setSubmissionStartTime(Date.now());
     sendMessage({ text: messageText });
@@ -108,7 +129,6 @@ function ChatPage() {
 
   const isSubmittingDisabled = !currentInput.trim() || isLoading || isSubmitting;
 
-  // if (!currentChat) return null;
   const isChatEmpty = messages.length === 0;
 
   if (!currentChat) {
@@ -168,7 +188,6 @@ function ChatPage() {
           isLoading={isLoading}
           disabled={isSubmittingDisabled}
           stop={stop}
-          onTooManyTools={setHasTooManyTools}
           hasMessages={messages.length > 0}
           onRerunAgent={handleRerunAgent}
         />

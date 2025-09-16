@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollArea } from '@ui/components/ui/scroll-area';
 import { cn } from '@ui/lib/utils/tailwind';
 
-import { AssistantMessage, OtherMessage, UserMessage } from './Messages';
+import { AssistantMessage, MemoriesMessage, OtherMessage, UserMessage } from './Messages';
 import SubmissionLoadingMessage from './Messages/SubmissionLoadingMessage';
 
 const CHAT_SCROLL_AREA_ID = 'chat-scroll-area';
@@ -91,6 +91,10 @@ const Message = ({
         />
       );
     case 'system':
+      // Check if this is a memories message
+      if (message.id === 'system-memories') {
+        return <MemoriesMessage message={message} />;
+      }
       return <OtherMessage message={message} />;
     default:
       return <OtherMessage message={message} />;
@@ -193,9 +197,16 @@ export default function ChatHistory({
         {messages.map((message, index) => (
           <div
             key={message.id || `message-${index}`}
-            className={cn('p-3 rounded-lg overflow-hidden min-w-0', getMessageClassName(message.role))}
+            className={cn(
+              'rounded-lg overflow-hidden min-w-0',
+              // Special handling for memories message
+              message.id === 'system-memories' ? '' : 'p-3',
+              message.id === 'system-memories' ? '' : getMessageClassName(message.role)
+            )}
           >
-            <div className="text-xs font-medium mb-1 opacity-70 capitalize">{message.role}</div>
+            {message.id !== 'system-memories' && (
+              <div className="text-xs font-medium mb-1 opacity-70 capitalize">{message.role}</div>
+            )}
             <div className="overflow-hidden min-w-0">
               <Message
                 message={message}
