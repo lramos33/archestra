@@ -36,10 +36,7 @@ function ChatPage() {
     fullMessagesBackup,
     currentChatSessionId,
     currentChat,
-    currentChatTitle,
     hasTooManyTools,
-    setHasTooManyTools,
-    hasLoadedMemories,
     setHasLoadedMemories,
     loadMemoriesIfNeeded,
   } = useChatAgent();
