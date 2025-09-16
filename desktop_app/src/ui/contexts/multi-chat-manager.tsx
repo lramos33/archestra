@@ -46,7 +46,6 @@ interface ChatInstanceActions {
 export type ChatInstance = ChatInstanceState & ChatInstanceActions;
 
 interface MultiChatManagerContextType {
-  // Current chat compatibility
   getCurrentChatInstance: () => ChatInstance | null;
 
   // Multi-chat support
@@ -189,7 +188,7 @@ function ChatInstanceManager({
     } else if (status === 'ready' && regeneratingIndex !== null) {
       setRegeneratingIndex(null);
     }
-  }, [status, regeneratingIndex, fullMessagesBackup.length]); // Remove messages dependency
+  }, [status, regeneratingIndex, fullMessagesBackup.length]);
 
   // Memories loader
   const loadMemoriesIfNeeded = useCallback(async () => {
@@ -373,17 +372,14 @@ export function MultiChatManagerProvider({ children }: { children: React.ReactNo
     );
   }, [chatInstances]);
 
-  const createChatInstance = useCallback(
-    (sessionId: string, chatId: number, title: string) => {
-      setRequestedInstances((prev) => {
-        if (!prev.has(sessionId)) {
-          return new Set(prev).add(sessionId);
-        }
-        return prev;
-      });
-    },
-    [] // Remove requestedInstances dependency
-  );
+  const createChatInstance = useCallback((sessionId: string, chatId: number, title: string) => {
+    setRequestedInstances((prev) => {
+      if (!prev.has(sessionId)) {
+        return new Set(prev).add(sessionId);
+      }
+      return prev;
+    });
+  }, []);
 
   const removeChatInstance = useCallback((sessionId: string) => {
     setChatInstances((prev) => {
@@ -409,7 +405,6 @@ export function MultiChatManagerProvider({ children }: { children: React.ReactNo
         removeChatInstance,
       }}
     >
-      {/* Render chat instance managers for requested instances */}
       {Array.from(requestedInstances).map((sessionId) => {
         const chat = useChatStore.getState().chats.find((c) => c.sessionId === sessionId);
         if (!chat) return null;
@@ -434,8 +429,6 @@ export function MultiChatManagerProvider({ children }: { children: React.ReactNo
 
 export function useMultiChatManager() {
   const context = useContext(MultiChatManagerContext);
-  if (!context) {
-    throw new Error('useMultiChatManager must be used within a MultiChatManagerProvider');
-  }
+  if (!context) throw new Error('useMultiChatManager must be used within a MultiChatManagerProvider');
   return context;
 }

@@ -6,7 +6,6 @@ import { useChatStore } from '@ui/stores';
 import { ChatInstance, MultiChatManagerProvider, useMultiChatManager } from './multi-chat-manager';
 
 interface IChatAgentContext {
-  // Current chat (backwards compatibility)
   messages: UIMessage[];
   setMessages: (msgs: UIMessage[]) => void;
   sendMessage: (args: { text: string }) => void;
@@ -51,15 +50,11 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
   const { getCurrentChat, getCurrentChatTitle } = useChatStore();
   const multiChatManager = useMultiChatManager();
 
-  // Current chat info
   const currentChat = getCurrentChat();
   const currentChatSessionId = currentChat?.sessionId || '';
   const currentChatTitle = getCurrentChatTitle();
-
-  // Get current chat instance from multi-chat manager
   const currentChatInstance = multiChatManager.getCurrentChatInstance();
 
-  // For backwards compatibility, provide current chat values
   const currentValues = currentChatInstance || {
     messages: [],
     setMessages: () => {},
@@ -92,7 +87,6 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
   return (
     <ChatAgentContext.Provider
       value={{
-        // Current chat values for backwards compatibility
         messages: currentValues.messages,
         setMessages: currentValues.setMessages,
         sendMessage: currentValues.sendMessage,
@@ -136,7 +130,6 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Main provider that wraps both the multi-chat manager and the chat agent context
 export function ChatAgentProvider({ children }: { children: React.ReactNode }) {
   return (
     <MultiChatManagerProvider>

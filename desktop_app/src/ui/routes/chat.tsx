@@ -13,15 +13,13 @@ export const Route = createFileRoute('/chat')({
 });
 
 function ChatPage() {
-  const { getCurrentChat, getCurrentChatTitle, saveDraftMessage, getDraftMessage, clearDraftMessage } = useChatStore();
+  const { saveDraftMessage, getDraftMessage, clearDraftMessage } = useChatStore();
   const { setOnlyTools } = useToolsStore();
   const {
     messages,
     setMessages,
     sendMessage,
     stop,
-    status,
-    regenerate,
     isLoading,
     isSubmitting,
     setIsSubmitting,
@@ -39,10 +37,8 @@ function ChatPage() {
     fullMessagesBackup,
     currentChatSessionId,
     currentChat,
-    currentChatTitle,
     hasTooManyTools,
     setHasTooManyTools,
-    hasLoadedMemories,
     setHasLoadedMemories,
     loadMemoriesIfNeeded,
   } = useChatAgent();
@@ -136,8 +132,6 @@ function ChatPage() {
 
   return (
     <div className="flex flex-col h-full gap-2 max-w-full overflow-hidden">
-      {/* <p>{JSON.stringify(messages)}</p> */}
-
       {isChatEmpty ? (
         <div className="flex-1 min-h-0 overflow-auto">
           <EmptyChatState onPromptSelect={handlePromptSelect} />
