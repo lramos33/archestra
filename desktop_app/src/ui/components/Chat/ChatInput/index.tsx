@@ -627,6 +627,13 @@ export default function ChatInput({
           </AIInputTools>
 
           <div className="flex items-center gap-2">
+            {isLoading && (
+              <div className="flex items-center gap-2 px-2.5 py-1 bg-blue-500/10 rounded-full border border-blue-500/20 group">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">Streaming</span>
+              </div>
+            )}
+
             {hasMessages && onRerunAgent && (
               <Tooltip>
                 <TooltipTrigger asChild>

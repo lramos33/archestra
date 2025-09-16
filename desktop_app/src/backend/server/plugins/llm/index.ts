@@ -2,7 +2,7 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createDeepSeek } from '@ai-sdk/deepseek';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI, openai } from '@ai-sdk/openai';
-import { convertToModelMessages, stepCountIs, streamText } from 'ai';
+import { convertToModelMessages, smoothStream, stepCountIs, streamText } from 'ai';
 import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import { createOllama } from 'ollama-ai-provider-v2';
 
@@ -113,10 +113,10 @@ const llmRoutes: FastifyPluginAsync = async (fastify) => {
           messages: convertToModelMessages(messages),
           maxSteps: 5, // Allow multiple tool calls
           stopWhen: stepCountIs(5),
-          // experimental_transform: smoothStream({
-          //   delayInMs: 20, // optional: defaults to 10ms
-          //   chunking: 'line', // optional: defaults to 'word'
-          // }),
+          experimental_transform: smoothStream({
+            delayInMs: 20, // optional: defaults to 10ms
+            chunking: 'line', // optional: defaults to 'word'
+          }),
           // onError({ error }) {
           // },
         };
