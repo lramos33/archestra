@@ -47,13 +47,6 @@ export type ChatInstance = ChatInstanceState & ChatInstanceActions;
 
 interface MultiChatManagerContextType {
   getCurrentChatInstance: () => ChatInstance | null;
-
-  // Multi-chat support
-  getChatInstance: (sessionId: string) => ChatInstance | null;
-  getAllChatInstances: () => Map<string, ChatInstance>;
-  getActiveChatInstances: () => ChatInstance[];
-  createChatInstance: (sessionId: string, chatId: number, title: string) => void;
-  removeChatInstance: (sessionId: string) => void;
 }
 
 const MultiChatManagerContext = createContext<MultiChatManagerContextType | null>(null);
@@ -322,92 +315,50 @@ export function MultiChatManagerProvider({ children }: { children: React.ReactNo
   const currentChat = getCurrentChat();
   const currentChatSessionId = currentChat?.sessionId || '';
 
-  // Create current chat instance if needed
   useEffect(() => {
-    if (currentChat && !requestedInstances.has(currentChatSessionId)) {
+    if (currentChatSessionId) {
       setRequestedInstances((prev) => new Set(prev).add(currentChatSessionId));
     }
-  }, [currentChat, currentChatSessionId]);
-  const handleInstanceCreated = useCallback((instance: ChatInstance) => {
-    setChatInstances((prev) => {
-      const existing = prev.get(instance.sessionId);
+  }, [currentChatSessionId]);
 
-      // Only update if there's a significant change to prevent unnecessary re-renders
-      if (
-        !existing ||
-        existing.status !== instance.status ||
-        existing.isLoading !== instance.isLoading ||
-        existing.isSubmitting !== instance.isSubmitting ||
-        existing.messages.length !== instance.messages.length
-      ) {
-        const newMap = new Map(prev);
-        newMap.set(instance.sessionId, instance);
-        return newMap;
-      }
+  const handleInstanceCreated = useCallback(
+    (instance: ChatInstance) => {
+      setChatInstances((prev) => {
+        const existing = prev.get(instance.sessionId);
 
-      return prev;
-    });
-  }, []);
+        // Only update if there's a significant change to prevent unnecessary re-renders
+        if (
+          !existing ||
+          existing.status !== instance.status ||
+          existing.isLoading !== instance.isLoading ||
+          existing.isSubmitting !== instance.isSubmitting ||
+          existing.messages.length !== instance.messages.length
+        ) {
+          const newMap = new Map(prev);
+          newMap.set(instance.sessionId, instance);
+
+          return newMap;
+        }
+
+        return prev;
+      });
+    },
+    [currentChatSessionId]
+  );
 
   const getCurrentChatInstance = useCallback(() => {
     return chatInstances.get(currentChatSessionId) || null;
   }, [chatInstances, currentChatSessionId]);
 
-  const getChatInstance = useCallback(
-    (sessionId: string) => {
-      return chatInstances.get(sessionId) || null;
-    },
-    [chatInstances]
-  );
-
-  const getAllChatInstances = useCallback(() => {
-    return new Map(chatInstances);
-  }, [chatInstances]);
-
-  const getActiveChatInstances = useCallback(() => {
-    return Array.from(chatInstances.values()).filter(
-      (instance) => instance.isLoading || instance.isSubmitting || instance.status === 'streaming'
-    );
-  }, [chatInstances]);
-
-  const createChatInstance = useCallback((sessionId: string, chatId: number, title: string) => {
-    setRequestedInstances((prev) => {
-      if (!prev.has(sessionId)) {
-        return new Set(prev).add(sessionId);
-      }
-      return prev;
-    });
-  }, []);
-
-  const removeChatInstance = useCallback((sessionId: string) => {
-    setChatInstances((prev) => {
-      const newMap = new Map(prev);
-      newMap.delete(sessionId);
-      return newMap;
-    });
-    setRequestedInstances((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(sessionId);
-      return newSet;
-    });
-  }, []);
-
   return (
     <MultiChatManagerContext.Provider
       value={{
         getCurrentChatInstance,
-        getChatInstance,
-        getAllChatInstances,
-        getActiveChatInstances,
-        createChatInstance,
-        removeChatInstance,
       }}
     >
       {Array.from(requestedInstances).map((sessionId) => {
         const chat = useChatStore.getState().chats.find((c) => c.sessionId === sessionId);
         if (!chat) return null;
-
-        console.log({ messages: chat.messages });
 
         return (
           <ChatInstanceManager

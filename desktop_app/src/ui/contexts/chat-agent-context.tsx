@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react';
 
 import { useChatStore } from '@ui/stores';
 
-import { ChatInstance, MultiChatManagerProvider, useMultiChatManager } from './multi-chat-manager';
+import { MultiChatManagerProvider, useMultiChatManager } from './multi-chat-manager';
 
 interface IChatAgentContext {
   messages: UIMessage[];
@@ -35,13 +35,6 @@ interface IChatAgentContext {
   hasLoadedMemories: boolean;
   setHasLoadedMemories: (b: boolean) => void;
   loadMemoriesIfNeeded: () => Promise<void>;
-
-  // Multi-chat support
-  getChatInstance: (sessionId: string) => ChatInstance | null;
-  getAllChatInstances: () => Map<string, ChatInstance>;
-  createChatInstance: (sessionId: string, chatId: number, title: string) => void;
-  removeChatInstance: (sessionId: string) => void;
-  getActiveChatInstances: () => ChatInstance[];
 }
 
 const ChatAgentContext = createContext({} as IChatAgentContext);
@@ -116,13 +109,6 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
         hasLoadedMemories: currentValues.hasLoadedMemories,
         setHasLoadedMemories: currentValues.setHasLoadedMemories,
         loadMemoriesIfNeeded: currentValues.loadMemoriesIfNeeded,
-
-        // Multi-chat support
-        getChatInstance: multiChatManager.getChatInstance,
-        getAllChatInstances: multiChatManager.getAllChatInstances,
-        createChatInstance: multiChatManager.createChatInstance,
-        removeChatInstance: multiChatManager.removeChatInstance,
-        getActiveChatInstances: multiChatManager.getActiveChatInstances,
       }}
     >
       {children}
