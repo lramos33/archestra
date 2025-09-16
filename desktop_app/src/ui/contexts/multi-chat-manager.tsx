@@ -95,7 +95,6 @@ function ChatInstanceManager({
       prepareSendMessagesRequest: ({ id, messages }) => {
         const currentModel = selectedModelRef.current;
         const currentCloudProviderModels = availableCloudProviderModelsRef.current;
-        const currentChat = getCurrentChat();
         const cloudModel = currentCloudProviderModels.find((m) => m.id === currentModel);
         const provider = cloudModel ? cloudModel.provider : 'ollama';
         return {
@@ -328,8 +327,7 @@ export function MultiChatManagerProvider({ children }: { children: React.ReactNo
     if (currentChat && !requestedInstances.has(currentChatSessionId)) {
       setRequestedInstances((prev) => new Set(prev).add(currentChatSessionId));
     }
-  }, [currentChat, currentChatSessionId]); // Remove requestedInstances dependency
-
+  }, [currentChat, currentChatSessionId]);
   const handleInstanceCreated = useCallback((instance: ChatInstance) => {
     setChatInstances((prev) => {
       const existing = prev.get(instance.sessionId);
