@@ -20,8 +20,8 @@ interface IChatAgentContext {
   setEditingContent: (c: string) => void;
   startEdit: (id: string, content: string) => void;
   cancelEdit: () => void;
-  saveEdit: (id: string) => void;
-  deleteMessage: (id: string) => void;
+  saveEdit: (id: string) => Promise<void>;
+  deleteMessage: (id: string) => Promise<void>;
   handleRegenerateMessage: (idx: number) => Promise<void>;
   regeneratingIndex: number | null;
   fullMessagesBackup: UIMessage[];
@@ -46,32 +46,42 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
   const currentChatTitle = getCurrentChatTitle();
   const currentChatInstance = multiChatManager.getCurrentChatInstance();
 
-  const currentValues = currentChatInstance || {
-    messages: [],
-    setMessages: () => {},
-    sendMessage: () => {},
-    stop: () => {},
-    status: 'ready',
-    regenerate: () => {},
-    isLoading: false,
-    isSubmitting: false,
-    setIsSubmitting: () => {},
-    editingMessageId: null,
-    editingContent: '',
-    setEditingContent: () => {},
-    startEdit: () => {},
-    cancelEdit: () => {},
-    saveEdit: () => {},
-    deleteMessage: () => {},
-    handleRegenerateMessage: async () => {},
-    regeneratingIndex: null,
-    fullMessagesBackup: [],
-    hasTooManyTools: false,
-    setHasTooManyTools: () => {},
-    hasLoadedMemories: false,
-    setHasLoadedMemories: () => {},
-    loadMemoriesIfNeeded: async () => {},
-  };
+  const currentValues: IChatAgentContext = currentChatInstance
+    ? {
+        ...currentChatInstance,
+        currentChatSessionId: currentChatInstance.sessionId,
+        currentChat,
+        currentChatTitle,
+      }
+    : {
+        messages: [],
+        setMessages: () => {},
+        sendMessage: () => {},
+        stop: () => {},
+        status: 'ready',
+        regenerate: () => {},
+        isLoading: false,
+        isSubmitting: false,
+        setIsSubmitting: () => {},
+        editingMessageId: null,
+        editingContent: '',
+        setEditingContent: () => {},
+        startEdit: () => {},
+        cancelEdit: () => {},
+        saveEdit: async () => {},
+        deleteMessage: async () => {},
+        handleRegenerateMessage: async () => {},
+        regeneratingIndex: null,
+        fullMessagesBackup: [],
+        currentChatSessionId: '',
+        currentChat: null,
+        currentChatTitle: '',
+        hasTooManyTools: false,
+        setHasTooManyTools: () => {},
+        hasLoadedMemories: false,
+        setHasLoadedMemories: () => {},
+        loadMemoriesIfNeeded: async () => {},
+      };
 
   return (
     <ChatAgentContext.Provider
@@ -90,8 +100,16 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
         setEditingContent: currentValues.setEditingContent,
         startEdit: currentValues.startEdit,
         cancelEdit: currentValues.cancelEdit,
-        saveEdit: currentValues.saveEdit,
-        deleteMessage: currentValues.deleteMessage,
+        saveEdit: async (id: string) => {
+          if (currentValues.saveEdit) {
+            await currentValues.saveEdit(id);
+          }
+        },
+        deleteMessage: async (id: string) => {
+          if (currentValues.deleteMessage) {
+            await currentValues.deleteMessage(id);
+          }
+        },
         handleRegenerateMessage: currentValues.handleRegenerateMessage,
         regeneratingIndex: currentValues.regeneratingIndex,
         fullMessagesBackup: currentValues.fullMessagesBackup,
