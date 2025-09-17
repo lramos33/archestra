@@ -178,6 +178,18 @@ export type WebSocketMessageInput =
         message: string;
         error?: string;
       };
+    }
+  | {
+      type: 'chat-token-usage-updated';
+      payload: {
+        chatId: number;
+        totalPromptTokens: number | null;
+        totalCompletionTokens: number | null;
+        totalTokens: number | null;
+        lastModel: string | null;
+        lastContextWindow: number | null;
+        contextUsagePercent: number;
+      };
     };
 
 export type ChatWithMessagesInput = {
@@ -193,6 +205,11 @@ export type ChatWithMessagesInput = {
         | Array<unknown>
       )
     | null;
+  totalPromptTokens: number | null;
+  totalCompletionTokens: number | null;
+  totalTokens: number | null;
+  lastModel: string | null;
+  lastContextWindow: number | null;
   createdAt: string;
   updatedAt: string;
   messages: Array<{
@@ -219,7 +236,7 @@ export type CloudProviderWithConfigInput = {
   validatedAt: string | null;
 };
 
-export type SupportedCloudProvidersInput = 'anthropic' | 'openai' | 'deepseek' | 'gemini' | 'ollama';
+export type SupportedCloudProvidersInput = 'anthropic' | 'openai' | 'deepseek' | 'gemini';
 
 export type SupportedCloudProviderModelInput = {
   id: string;
@@ -632,6 +649,18 @@ export type WebSocketMessage =
         message: string;
         error?: string;
       };
+    }
+  | {
+      type: 'chat-token-usage-updated';
+      payload: {
+        chatId: number;
+        totalPromptTokens: number | null;
+        totalCompletionTokens: number | null;
+        totalTokens: number | null;
+        lastModel: string | null;
+        lastContextWindow: number | null;
+        contextUsagePercent: number;
+      };
     };
 
 export type ChatWithMessages = {
@@ -647,6 +676,11 @@ export type ChatWithMessages = {
         | Array<unknown>
       )
     | null;
+  totalPromptTokens: number | null;
+  totalCompletionTokens: number | null;
+  totalTokens: number | null;
+  lastModel: string | null;
+  lastContextWindow: number | null;
   createdAt: string;
   updatedAt: string;
   messages: Array<{
@@ -673,7 +707,7 @@ export type CloudProviderWithConfig = {
   validatedAt: string | null;
 };
 
-export type SupportedCloudProviders = 'anthropic' | 'openai' | 'deepseek' | 'gemini' | 'ollama';
+export type SupportedCloudProviders = 'anthropic' | 'openai' | 'deepseek' | 'gemini';
 
 export type SupportedCloudProviderModel = {
   id: string;
@@ -1993,6 +2027,20 @@ export type ResetSandboxResponses = {
 };
 
 export type ResetSandboxResponse = ResetSandboxResponses[keyof ResetSandboxResponses];
+
+export type GetApiSystemBackendLogsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/system/backend-logs';
+};
+
+export type GetApiSystemBackendLogsResponses = {
+  /**
+   * Default Response
+   */
+  200: unknown;
+};
 
 export type GetUserData = {
   body?: never;

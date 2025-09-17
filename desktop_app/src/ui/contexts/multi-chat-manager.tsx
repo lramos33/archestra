@@ -3,7 +3,7 @@ import { DefaultChatTransport, UIMessage } from 'ai';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import config from '@ui/config';
-import { useMessageActions } from '@ui/hooks/useMessageActions';
+import { useMessageActions } from '@ui/hooks/use-message-actions';
 import { getAllMemories } from '@ui/lib/clients/archestra/api/gen';
 import { useChatStore, useCloudProvidersStore, useOllamaStore, useToolsStore } from '@ui/stores';
 import { useStatusBarStore } from '@ui/stores/status-bar-store';

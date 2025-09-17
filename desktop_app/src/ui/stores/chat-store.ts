@@ -1,3 +1,4 @@
+import { UIMessage } from 'ai';
 import { create } from 'zustand';
 
 import config from '@ui/config';
@@ -35,6 +36,7 @@ interface ChatActions {
   saveDraftMessage: (chatId: number, content: string) => void;
   getDraftMessage: (chatId: number) => string;
   clearDraftMessage: (chatId: number) => void;
+  updateMessages: (chatId: number, messages: UIMessage[]) => void;
 }
 
 type ChatStore = ChatState & ChatActions;
@@ -51,12 +53,36 @@ const listenForChatTitleUpdates = () => {
   });
 };
 
+/**
+ * Listen for token usage updates from the backend via WebSocket
+ */
+const listenForTokenUsageUpdates = () => {
+  return websocketService.subscribe('chat-token-usage-updated', (message) => {
+    const { chatId, totalPromptTokens, totalCompletionTokens, totalTokens, lastModel, lastContextWindow } =
+      message.payload;
+
+    useChatStore.setState((state) => ({
+      chats: state.chats.map((chat) =>
+        chat.id === chatId
+          ? {
+              ...chat,
+              totalPromptTokens,
+              totalCompletionTokens,
+              totalTokens,
+              lastModel,
+              lastContextWindow,
+            }
+          : chat
+      ),
+    }));
+  });
+};
+
 export const useChatStore = create<ChatStore>((set, get) => ({
   // State
   chats: [],
   currentChatSessionId: null,
   isLoadingChats: false,
-
   draftMessages: new Map(),
 
   loadChats: async () => {
@@ -252,6 +278,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     try {
       listenForChatTitleUpdates();
+      listenForTokenUsageUpdates();
     } catch (error) {
       console.error('Failed to establish WebSocket connection:', error);
     }
@@ -280,6 +307,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       newDrafts.delete(chatId);
       return { draftMessages: newDrafts };
     });
+  },
+
+  updateMessages: (chatId: number, messages: UIMessage[]) => {
+    set((state) => ({
+      chats: state.chats.map((chat) => (chat.id === chatId ? { ...chat, messages } : chat)),
+    }));
   },
 }));
 

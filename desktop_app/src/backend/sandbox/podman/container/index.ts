@@ -2,7 +2,7 @@ import type { RawReplyDefaultExpression } from 'fastify';
 import fs from 'fs';
 import path from 'node:path';
 import os from 'os';
-import { createStream } from 'rotating-file-stream';
+import { type FileSize, createStream } from 'rotating-file-stream';
 import type { Duplex } from 'stream';
 import { Agent, request, upgrade } from 'undici';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,6 +24,8 @@ import log from '@backend/utils/logger';
 import { parseBoolean } from '@backend/utils/parse';
 import { LOGS_DIRECTORY } from '@backend/utils/paths';
 
+import { FILE_SYSTEM_BASE_MOUNT_PATH } from '../../../../constants';
+
 export const PodmanContainerStateSchema = z.enum([
   'not_created',
   'created',
@@ -35,8 +37,6 @@ export const PodmanContainerStateSchema = z.enum([
   'stopped',
   'exited',
 ]);
-
-export const PROJECTS_BASE = '/home/mcp/projects';
 
 export const PodmanContainerStatusSummarySchema = z.object({
   /**
@@ -290,7 +290,7 @@ export default class PodmanContainer {
           /**
            * Rotate files when they reach this size, e.g. '5M'
            */
-          size: mcpServerLogMaxSize,
+          size: mcpServerLogMaxSize as FileSize,
           /**
            * Keep only N rotated files
            */
@@ -542,7 +542,7 @@ export default class PodmanContainer {
     const hostToContainerPath = (hostPath: string): string => {
       const baseName = path.basename(hostPath);
       const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9._-]/g, '_');
-      return path.posix.join(PROJECTS_BASE, sanitizedBaseName);
+      return path.posix.join(FILE_SYSTEM_BASE_MOUNT_PATH, sanitizedBaseName);
     };
     const replaceTemplateVariables = (str: string): string => {
       if (!userConfigValues) return str;
@@ -1292,8 +1292,7 @@ export default class PodmanContainer {
         if (typeof hostPathRaw !== 'string' || hostPathRaw.trim() === '') continue;
         const hostPath = hostPathRaw.trim();
 
-        // Mount to <PROJECTS_BASE> with a simple sanitized name to avoid conflicts
-        // Check that the directory exists
+        // Mount with a simple sanitized name to avoid conflicts + check that the directory exists
         try {
           const stats = await fs.promises.stat(hostPath);
           if (!stats.isDirectory()) {
@@ -1307,7 +1306,7 @@ export default class PodmanContainer {
 
         const baseName = path.basename(hostPath);
         const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const target = path.posix.join(PROJECTS_BASE, sanitizedBaseName);
+        const target = path.posix.join(FILE_SYSTEM_BASE_MOUNT_PATH, sanitizedBaseName);
 
         log.info(`Mount (bind): host="${hostPath}" -> container="${target}" (readOnly=${readOnly})`);
         // Use SpecGenerator Mount shape (capitalized keys)
