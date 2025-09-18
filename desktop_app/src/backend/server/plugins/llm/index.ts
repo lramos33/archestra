@@ -2,7 +2,7 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createDeepSeek } from '@ai-sdk/deepseek';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI, openai } from '@ai-sdk/openai';
-import { convertToModelMessages, smoothStream, stepCountIs, streamText } from 'ai';
+import { convertToModelMessages, stepCountIs, streamText } from 'ai';
 import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import { createOllama } from 'ollama-ai-provider-v2';
 
@@ -109,10 +109,6 @@ const llmRoutes: FastifyPluginAsync = async (fastify) => {
           model: await createModelInstance(model, provider),
           messages: convertToModelMessages(messages),
           stopWhen: stepCountIs(vercelSdkConfig.maxToolCalls),
-          experimental_transform: smoothStream({
-            delayInMs: 20, // optional: defaults to 10ms
-            chunking: 'line', // optional: defaults to 'word'
-          }),
           providerOptions: {
             /**
              * The following options are available for the OpenAI provider
