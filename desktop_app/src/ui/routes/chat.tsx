@@ -187,7 +187,7 @@ function ChatPage() {
           stop={stop}
           hasMessages={messages.length > 0}
           onRerunAgent={handleRerunAgent}
-          status={status}
+          rerunAgentDisabled={isLoading || isSubmitting}
           isSubmitting={isSubmitting}
         />
       </div>
