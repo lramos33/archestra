@@ -29,6 +29,7 @@ import {
   useOllamaStore,
   useToolsStore,
 } from '@ui/stores';
+import { ChatMessageStatus } from '@ui/types/chat';
 import type { Tool } from '@ui/types/tools';
 
 import { SYSTEM_MODEL_NAMES } from '../../../../constants';
@@ -42,9 +43,12 @@ interface ChatInputProps {
   isLoading: boolean;
   isPreparing: boolean;
   disabled: boolean;
+  rerunAgentDisabled: boolean;
   stop: () => void;
   hasMessages?: boolean;
   onRerunAgent?: () => void;
+  status?: 'submitted' | 'streaming' | 'ready' | 'error';
+  isSubmitting?: boolean;
 }
 
 const PLACEHOLDER_EXAMPLES = [
@@ -67,9 +71,12 @@ export default function ChatInput({
   isLoading,
   isPreparing,
   disabled,
+  rerunAgentDisabled,
   stop,
   hasMessages = false,
   onRerunAgent,
+  status = 'ready',
+  isSubmitting = false,
 }: ChatInputProps) {
   const { isDeveloperMode, toggleDeveloperMode } = useDeveloperModeStore();
   const { installedModels, selectedModel, setSelectedModel } = useOllamaStore();
@@ -648,7 +655,7 @@ export default function ChatInput({
             {hasMessages && onRerunAgent && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <AIInputButton onClick={onRerunAgent} disabled={false} type="button" className="px-3">
+                  <AIInputButton onClick={onRerunAgent} disabled={rerunAgentDisabled} type="button" className="px-3">
                     <RefreshCw size={16} />
                     <span className="ml-1.5 text-sm">Restart Agent</span>
                   </AIInputButton>
@@ -658,7 +665,21 @@ export default function ChatInput({
                 </TooltipContent>
               </Tooltip>
             )}
-            <AIInputSubmit onClick={isLoading ? stop : undefined} disabled={disabled} />
+            <AIInputSubmit
+              onClick={status === 'streaming' || status === 'submitted' || isSubmitting ? stop : undefined}
+              disabled={disabled}
+              status={
+                isSubmitting
+                  ? ChatMessageStatus.Submitted
+                  : status === 'submitted'
+                    ? ChatMessageStatus.Submitted
+                    : status === 'streaming'
+                      ? ChatMessageStatus.Streaming
+                      : status === 'error'
+                        ? ChatMessageStatus.Error
+                        : ChatMessageStatus.Ready
+              }
+            />
           </div>
         </AIInputToolbar>
       </AIInput>

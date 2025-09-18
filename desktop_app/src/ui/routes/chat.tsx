@@ -39,6 +39,8 @@ function ChatPage() {
     loadMemoriesIfNeeded,
   } = useChatAgent();
 
+  const pendingPrompt = pendingPrompts.get(currentChatSessionId);
+
   // Get current input from draft messages
   const currentInput = currentChat ? getDraftMessage(currentChat.id) : '';
 
@@ -72,7 +74,7 @@ function ChatPage() {
       saveDraftMessage(currentChat.id, newValue);
       debouncedSaveDraft(currentChat.id, newValue);
     }
-  };
+  }, [selectedToolIds, setOnlyTools]);
 
   const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
@@ -132,12 +134,15 @@ function ChatPage() {
         <ChatInput
           input=""
           disabled={true}
+          rerunAgentDisabled={true}
           isLoading={false}
           isPreparing={false}
           handleInputChange={() => {}}
           handleSubmit={() => {}}
           stop={() => {}}
           hasMessages={false}
+          status="ready"
+          isSubmitting={false}
         />
       </div>
     );
@@ -172,9 +177,7 @@ function ChatPage() {
           />
         </div>
       )}
-
       <SystemPrompt />
-
       <div className="flex-shrink-0">
         <ChatInput
           input={currentInput}
@@ -186,6 +189,8 @@ function ChatPage() {
           stop={stop}
           hasMessages={messages.length > 0}
           onRerunAgent={handleRerunAgent}
+          status={status}
+          isSubmitting={isSubmitting}
         />
       </div>
     </div>
