@@ -30,9 +30,6 @@ interface IChatAgentContext {
   currentChatTitle: string;
   hasTooManyTools: boolean;
   setHasTooManyTools: (b: boolean) => void;
-  hasLoadedMemories: boolean;
-  setHasLoadedMemories: (b: boolean) => void;
-  loadMemoriesIfNeeded: () => Promise<void>;
 }
 
 const ChatAgentContext = createContext({} as IChatAgentContext);
@@ -78,9 +75,6 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
         currentChatTitle: '',
         hasTooManyTools: false,
         setHasTooManyTools: () => {},
-        hasLoadedMemories: false,
-        setHasLoadedMemories: () => {},
-        loadMemoriesIfNeeded: async () => {},
       };
 
   return (
@@ -118,9 +112,6 @@ function ChatAgentContextProvider({ children }: { children: React.ReactNode }) {
         currentChatTitle,
         hasTooManyTools: currentValues.hasTooManyTools,
         setHasTooManyTools: currentValues.setHasTooManyTools,
-        hasLoadedMemories: currentValues.hasLoadedMemories,
-        setHasLoadedMemories: currentValues.setHasLoadedMemories,
-        loadMemoriesIfNeeded: currentValues.loadMemoriesIfNeeded,
       }}
     >
       {children}

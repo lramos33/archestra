@@ -4,9 +4,13 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import config from '@ui/config';
 import { useMessageActions } from '@ui/hooks/use-message-actions';
-import { getAllMemories } from '@ui/lib/clients/archestra/api/gen';
-import { useChatStore, useCloudProvidersStore, useOllamaStore, useToolsStore } from '@ui/stores';
+import { useChatStore, useCloudProvidersStore, useMemoryStore, useOllamaStore, useToolsStore } from '@ui/stores';
 import { useStatusBarStore } from '@ui/stores/status-bar-store';
+
+const {
+  archestra: { chatStreamBaseUrl },
+  chat: { systemMemoriesMessageId },
+} = config;
 
 interface ChatInstanceState {
   sessionId: string;
@@ -21,7 +25,6 @@ interface ChatInstanceState {
   regeneratingIndex: number | null;
   fullMessagesBackup: UIMessage[];
   hasTooManyTools: boolean;
-  hasLoadedMemories: boolean;
 }
 
 interface ChatInstanceActions {
@@ -37,8 +40,6 @@ interface ChatInstanceActions {
   deleteMessage: (id: string) => Promise<void>;
   handleRegenerateMessage: (idx: number) => Promise<void>;
   setHasTooManyTools: (b: boolean) => void;
-  setHasLoadedMemories: (b: boolean) => void;
-  loadMemoriesIfNeeded: () => Promise<void>;
 }
 
 export type ChatInstance = ChatInstanceState & ChatInstanceActions;
@@ -67,10 +68,10 @@ function ChatInstanceManager({
   const { getCurrentChat } = useChatStore();
   const { selectedToolIds } = useToolsStore();
   const { selectedModel } = useOllamaStore();
+  const { memories } = useMemoryStore();
   const { availableCloudProviderModels } = useCloudProvidersStore();
   const { setChatInference } = useStatusBarStore();
   const [hasTooManyTools, setHasTooManyTools] = useState(false);
-  const [hasLoadedMemories, setHasLoadedMemories] = useState(false);
 
   // Refs for transport
   const selectedModelRef = useRef(selectedModel);
@@ -80,21 +81,33 @@ function ChatInstanceManager({
   const selectedToolIdsRef = useRef(selectedToolIds);
   selectedToolIdsRef.current = selectedToolIds;
 
+  // Memories
+  const memoriesText = memories.map((m) => `${m.name}: ${m.value}`).join('\n');
+  const memoriesUIMessage = useMemo(
+    () =>
+      (memoriesText
+        ? {
+            id: systemMemoriesMessageId,
+            role: 'system',
+            parts: [{ type: 'text', text: `Previous memories loaded:\n${memoriesText}` }],
+          }
+        : null) as UIMessage | null,
+    [memoriesText]
+  );
+
   const transport = useMemo(() => {
-    const apiEndpoint = `${config.archestra.chatStreamBaseUrl}/stream`;
     return new DefaultChatTransport({
-      api: apiEndpoint,
+      api: `${chatStreamBaseUrl}/stream`,
       prepareSendMessagesRequest: ({ id, messages }) => {
         const currentModel = selectedModelRef.current;
         const currentCloudProviderModels = availableCloudProviderModelsRef.current;
         const cloudModel = currentCloudProviderModels.find((m) => m.id === currentModel);
-        const provider = cloudModel ? cloudModel.provider : 'ollama';
         return {
           body: {
             messages,
-            model: currentModel || 'llama3.1:8b',
+            model: currentModel,
             sessionId: id || sessionId,
-            provider: provider,
+            provider: cloudModel ? cloudModel.provider : 'ollama',
             chatId: chatId,
             toolChoice: 'auto',
           },
@@ -103,13 +116,28 @@ function ChatInstanceManager({
     });
   }, [sessionId, chatId, getCurrentChat]);
 
+  // Combine memories message with initial messages
+  const messagesWithMemories = useMemo(() => {
+    if (memoriesUIMessage && initialMessages.length > 0) {
+      // Check if memories message already exists in initial messages
+      const hasMemoriesMessage = initialMessages.some((msg) => msg.id === systemMemoriesMessageId);
+      if (!hasMemoriesMessage) {
+        return [memoriesUIMessage, ...initialMessages];
+      }
+    } else if (memoriesUIMessage && initialMessages.length === 0) {
+      // For new chats, just add memories
+      return [memoriesUIMessage];
+    }
+    return initialMessages;
+  }, [memoriesUIMessage, initialMessages]);
+
   const { sendMessage, messages, setMessages, stop, status, regenerate } = useChat({
     id: sessionId || 'temp-id',
     transport,
     onError: (error) => {
       console.error('Chat error:', error);
     },
-    messages: initialMessages,
+    messages: messagesWithMemories,
   });
 
   // Regeneration logic
@@ -180,27 +208,6 @@ function ChatInstanceManager({
     }
   }, [status, regeneratingIndex, fullMessagesBackup.length]);
 
-  // Memories loader
-  const loadMemoriesIfNeeded = useCallback(async () => {
-    if (messages.length === 0 && !hasLoadedMemories) {
-      try {
-        const { data } = await getAllMemories();
-        if (data && data.memories && data.memories.length > 0) {
-          const memoriesText = data.memories.map((m) => `${m.name}: ${m.value}`).join('\n');
-          const systemMessage: UIMessage = {
-            id: 'system-memories',
-            role: 'system',
-            parts: [{ type: 'text', text: `Previous memories loaded:\n${memoriesText}` }],
-          };
-          setMessages([systemMessage]);
-        }
-        setHasLoadedMemories(true);
-      } catch (error) {
-        setHasLoadedMemories(true);
-      }
-    }
-  }, [messages, hasLoadedMemories]);
-
   const isLoading = status === 'streaming';
 
   // Create instance object with stable references
@@ -218,8 +225,6 @@ function ChatInstanceManager({
       deleteMessage,
       handleRegenerateMessage,
       setHasTooManyTools,
-      setHasLoadedMemories,
-      loadMemoriesIfNeeded,
     }),
     [
       setMessages,
@@ -234,8 +239,6 @@ function ChatInstanceManager({
       deleteMessage,
       handleRegenerateMessage,
       setHasTooManyTools,
-      setHasLoadedMemories,
-      loadMemoriesIfNeeded,
     ]
   );
 
@@ -253,7 +256,6 @@ function ChatInstanceManager({
       regeneratingIndex,
       fullMessagesBackup,
       hasTooManyTools,
-      hasLoadedMemories,
       ...stableActions,
     }),
     [
@@ -269,7 +271,6 @@ function ChatInstanceManager({
       regeneratingIndex,
       fullMessagesBackup,
       hasTooManyTools,
-      hasLoadedMemories,
       stableActions,
     ]
   );

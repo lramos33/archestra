@@ -5,6 +5,7 @@ import ChatHistory from '@ui/components/Chat/ChatHistory';
 import ChatInput from '@ui/components/Chat/ChatInput';
 import EmptyChatState from '@ui/components/Chat/EmptyChatState';
 import SystemPrompt from '@ui/components/Chat/SystemPrompt';
+import config from '@ui/config';
 import { useChatAgent } from '@ui/contexts/chat-agent-context';
 import { useChatStore, useToolsStore } from '@ui/stores';
 
@@ -17,6 +18,7 @@ function ChatPage() {
   const { setOnlyTools } = useToolsStore();
   const {
     messages,
+    setMessages,
     sendMessage,
     stop,
     isLoading,
@@ -35,17 +37,10 @@ function ChatPage() {
     currentChatSessionId,
     currentChat,
     hasTooManyTools,
-    setHasLoadedMemories,
-    loadMemoriesIfNeeded,
   } = useChatAgent();
 
   // Get current input from draft messages
   const currentInput = currentChat ? getDraftMessage(currentChat.id) : '';
-
-  // Reset memory loading flag when chat changes
-  useEffect(() => {
-    setHasLoadedMemories(false);
-  }, [currentChatSessionId, setHasLoadedMemories]);
 
   // Simple debounce implementation
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -78,10 +73,9 @@ function ChatPage() {
     e?.preventDefault();
     if (isSubmittingDisabled) return;
     if (currentInput.trim() && currentChat) {
-      await loadMemoriesIfNeeded();
       let messageText = currentInput;
       if (hasTooManyTools) {
-        await setOnlyTools(['archestra__list_available_tools', 'archestra__enable_tools', 'archestra__disable_tools']);
+        setOnlyTools(['archestra__list_available_tools', 'archestra__enable_tools', 'archestra__disable_tools']);
         messageText = `You currently have only list_available_tools and enable_tools enabled. Follow these steps:\n1. Call list_available_tools to see all available tool IDs\n2. Call enable_tools with the specific tool IDs you need, for example: {"toolIds": ["filesystem__read_file", "filesystem__write_file"]}\n3. After enabling the necessary tools, disable Archestra tools using disable_tools.\n4. After, proceed with this task: \n\n${currentInput}`;
       }
       setIsSubmitting(true);
@@ -91,7 +85,6 @@ function ChatPage() {
   };
 
   const handlePromptSelect = async (prompt: string) => {
-    await loadMemoriesIfNeeded();
     setIsSubmitting(true);
     sendMessage({ text: prompt });
   };
@@ -110,11 +103,14 @@ function ChatPage() {
     }
     if (!messageText) return;
 
-    // Reset memory loading flags to load memories again
-    setHasLoadedMemories(false);
-    await loadMemoriesIfNeeded();
+    // Clear all messages except memories (system message)
+    const memoriesMessage = messages.find((msg) => msg.id === config.chat.systemMemoriesMessageId);
+    const newMessages = memoriesMessage ? [memoriesMessage] : [];
 
-    // Re-run with the first user message
+    // Update messages to only show memories
+    setMessages(newMessages);
+
+    // Automatically send the first user message again
     setIsSubmitting(true);
     sendMessage({ text: messageText });
   };
