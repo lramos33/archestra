@@ -39,8 +39,6 @@ function ChatPage() {
     loadMemoriesIfNeeded,
   } = useChatAgent();
 
-  const pendingPrompt = pendingPrompts.get(currentChatSessionId);
-
   // Get current input from draft messages
   const currentInput = currentChat ? getDraftMessage(currentChat.id) : '';
 
@@ -74,7 +72,7 @@ function ChatPage() {
       saveDraftMessage(currentChat.id, newValue);
       debouncedSaveDraft(currentChat.id, newValue);
     }
-  }, [selectedToolIds, setOnlyTools]);
+  };
 
   const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
