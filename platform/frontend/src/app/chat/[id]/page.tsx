@@ -1,12 +1,12 @@
-import { getChatById } from '@shared/api-client';
+import { getChatById } from "@shared/api-client";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
-} from '@tanstack/react-query';
-import { Suspense } from 'react';
-import { chatKeys } from '@/lib/chat.keys';
-import { ChatView } from './chat-view';
+} from "@tanstack/react-query";
+import { Suspense } from "react";
+import { chatKeys } from "@/lib/chat.keys";
+import { ChatView } from "./chat-view";
 
 export default async function ChatPage({
   params,
@@ -22,7 +22,7 @@ export default async function ChatPage({
     queryFn: async () => {
       const response = await getChatById({ path: { id } });
       if (response.error) {
-        throw new Error('Failed to fetch chat');
+        throw new Error("Failed to fetch chat");
       }
       return response.data;
     },

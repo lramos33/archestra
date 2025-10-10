@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import * as api from '@shared/api-client/sdk.gen';
+import * as api from "@shared/api-client/sdk.gen";
 import type {
   Chat,
   ChatWithMessages,
   CreateChatRequest,
   UpdateChatRequest,
-} from '@shared/types/chat.types';
+} from "@shared/types/chat.types";
 import {
   useMutation,
   useQuery,
   useQueryClient,
   useSuspenseQuery,
-} from '@tanstack/react-query';
+} from "@tanstack/react-query";
 
 // ============================================
 // Query Keys
 // ============================================
 
 // Import and re-export chatKeys from separate file so it can be used in Server Components
-import { chatKeys } from './chat.keys';
+import { chatKeys } from "./chat.keys";
 export { chatKeys };
 
 // ============================================
@@ -36,7 +36,7 @@ export function useChats() {
     queryFn: async () => {
       const response = await api.getChats();
       if (response.error) {
-        throw new Error('Failed to fetch chats');
+        throw new Error("Failed to fetch chats");
       }
       return response.data as unknown as Chat[];
     },
@@ -53,7 +53,7 @@ export function useChat(chatId: string) {
     queryFn: async () => {
       const response = await api.getChatById({ path: { id: chatId } });
       if (response.error) {
-        throw new Error('Failed to fetch chat');
+        throw new Error("Failed to fetch chat");
       }
       return response.data as unknown as ChatWithMessages;
     },
@@ -69,7 +69,7 @@ export function useChatsOptional() {
     queryFn: async () => {
       const response = await api.getChats();
       if (response.error) {
-        throw new Error('Failed to fetch chats');
+        throw new Error("Failed to fetch chats");
       }
       return response.data as unknown as Chat[];
     },
@@ -90,7 +90,7 @@ export function useCreateChat() {
     mutationFn: async (data: CreateChatRequest) => {
       const response = await api.createChat({ body: data });
       if (response.error) {
-        throw new Error('Failed to create chat');
+        throw new Error("Failed to create chat");
       }
       return response.data as unknown as Chat;
     },
@@ -120,7 +120,7 @@ export function useUpdateChat() {
         body: data,
       });
       if (response.error) {
-        throw new Error('Failed to update chat');
+        throw new Error("Failed to update chat");
       }
       return response.data as unknown as Chat;
     },
@@ -142,7 +142,7 @@ export function useDeleteChat() {
     mutationFn: async (id: string) => {
       const response = await api.deleteChat({ path: { id } });
       if (response.error) {
-        throw new Error('Failed to delete chat');
+        throw new Error("Failed to delete chat");
       }
     },
     onSuccess: () => {
@@ -171,7 +171,7 @@ export function useUpdateChatTools() {
         body: { toolIds },
       });
       if (response.error) {
-        throw new Error('Failed to update tools');
+        throw new Error("Failed to update tools");
       }
       return response.data;
     },
