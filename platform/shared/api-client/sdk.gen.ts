@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateAgentData, CreateAgentErrors, CreateAgentResponses, CreateToolInvocationPolicyData, CreateToolInvocationPolicyErrors, CreateToolInvocationPolicyResponses, CreateTrustedDataPolicyData, CreateTrustedDataPolicyErrors, CreateTrustedDataPolicyResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, DeleteToolInvocationPolicyData, DeleteToolInvocationPolicyErrors, DeleteToolInvocationPolicyResponses, DeleteTrustedDataPolicyData, DeleteTrustedDataPolicyErrors, DeleteTrustedDataPolicyResponses, DeleteV1ByProviderBy__Data, DeleteV1ByProviderBy__Responses, DeleteV1ByProviderData, DeleteV1ByProviderResponses, GetAgentData, GetAgentErrors, GetAgentResponses, GetAgentsData, GetAgentsErrors, GetAgentsResponses, GetHealthData, GetHealthResponses, GetInteractionData, GetInteractionErrors, GetInteractionResponses, GetInteractionsData, GetInteractionsResponses, GetOpenapiJsonData, GetOpenapiJsonResponses, GetOperatorsData, GetOperatorsResponses, GetToolInvocationPoliciesData, GetToolInvocationPoliciesErrors, GetToolInvocationPoliciesResponses, GetToolInvocationPolicyData, GetToolInvocationPolicyErrors, GetToolInvocationPolicyResponses, GetToolsData, GetToolsErrors, GetToolsResponses, GetTrustedDataPoliciesData, GetTrustedDataPoliciesErrors, GetTrustedDataPoliciesResponses, GetTrustedDataPolicyData, GetTrustedDataPolicyErrors, GetTrustedDataPolicyResponses, GetV1ByProviderBy__Data, GetV1ByProviderBy__Responses, GetV1ByProviderData, GetV1ByProviderResponses, HeadV1ByProviderBy__Data, HeadV1ByProviderBy__Responses, HeadV1ByProviderData, HeadV1ByProviderResponses, OpenAiChatCompletionsWithAgentData, OpenAiChatCompletionsWithAgentErrors, OpenAiChatCompletionsWithAgentResponses, OpenAiChatCompletionsWithDefaultAgentData, OpenAiChatCompletionsWithDefaultAgentErrors, OpenAiChatCompletionsWithDefaultAgentResponses, OptionsV1ByProviderBy__Data, OptionsV1ByProviderBy__Responses, OptionsV1ByProviderData, OptionsV1ByProviderResponses, PatchV1ByProviderBy__Data, PatchV1ByProviderBy__Responses, PatchV1ByProviderData, PatchV1ByProviderResponses, PostV1ByProviderBy__Data, PostV1ByProviderBy__Responses, PostV1ByProviderData, PostV1ByProviderResponses, PutV1ByProviderBy__Data, PutV1ByProviderBy__Responses, PutV1ByProviderData, PutV1ByProviderResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses, UpdateToolData, UpdateToolErrors, UpdateToolInvocationPolicyData, UpdateToolInvocationPolicyErrors, UpdateToolInvocationPolicyResponses, UpdateToolResponses, UpdateTrustedDataPolicyData, UpdateTrustedDataPolicyErrors, UpdateTrustedDataPolicyResponses } from './types.gen';
+import type { AddChatToolsData, AddChatToolsErrors, AddChatToolsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, CreateChatData, CreateChatErrors, CreateChatResponses, CreateToolInvocationPolicyData, CreateToolInvocationPolicyErrors, CreateToolInvocationPolicyResponses, CreateTrustedDataPolicyData, CreateTrustedDataPolicyErrors, CreateTrustedDataPolicyResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, DeleteChatData, DeleteChatErrors, DeleteChatResponses, DeleteToolInvocationPolicyData, DeleteToolInvocationPolicyErrors, DeleteToolInvocationPolicyResponses, DeleteTrustedDataPolicyData, DeleteTrustedDataPolicyErrors, DeleteTrustedDataPolicyResponses, DeleteV1ByProviderBy__Data, DeleteV1ByProviderBy__Responses, DeleteV1ByProviderData, DeleteV1ByProviderResponses, DeselectAllChatToolsData, DeselectAllChatToolsErrors, DeselectAllChatToolsResponses, GetAgentData, GetAgentErrors, GetAgentResponses, GetAgentsData, GetAgentsErrors, GetAgentsResponses, GetChatByIdData, GetChatByIdErrors, GetChatByIdResponses, GetChatsData, GetChatsErrors, GetChatsResponses, GetChatToolsData, GetChatToolsErrors, GetChatToolsResponses, GetHealthData, GetHealthResponses, GetInteractionData, GetInteractionErrors, GetInteractionResponses, GetInteractionsData, GetInteractionsResponses, GetOpenapiJsonData, GetOpenapiJsonResponses, GetOperatorsData, GetOperatorsResponses, GetToolInvocationPoliciesData, GetToolInvocationPoliciesErrors, GetToolInvocationPoliciesResponses, GetToolInvocationPolicyData, GetToolInvocationPolicyErrors, GetToolInvocationPolicyResponses, GetToolsData, GetToolsErrors, GetToolsResponses, GetTrustedDataPoliciesData, GetTrustedDataPoliciesErrors, GetTrustedDataPoliciesResponses, GetTrustedDataPolicyData, GetTrustedDataPolicyErrors, GetTrustedDataPolicyResponses, GetV1ByProviderBy__Data, GetV1ByProviderBy__Responses, GetV1ByProviderData, GetV1ByProviderResponses, HeadV1ByProviderBy__Data, HeadV1ByProviderBy__Responses, HeadV1ByProviderData, HeadV1ByProviderResponses, OpenAiChatCompletionsWithAgentData, OpenAiChatCompletionsWithAgentErrors, OpenAiChatCompletionsWithAgentResponses, OpenAiChatCompletionsWithDefaultAgentData, OpenAiChatCompletionsWithDefaultAgentErrors, OpenAiChatCompletionsWithDefaultAgentResponses, OptionsV1ByProviderBy__Data, OptionsV1ByProviderBy__Responses, OptionsV1ByProviderData, OptionsV1ByProviderResponses, PatchV1ByProviderBy__Data, PatchV1ByProviderBy__Responses, PatchV1ByProviderData, PatchV1ByProviderResponses, PostV1ByProviderBy__Data, PostV1ByProviderBy__Responses, PostV1ByProviderData, PostV1ByProviderResponses, PutV1ByProviderBy__Data, PutV1ByProviderBy__Responses, PutV1ByProviderData, PutV1ByProviderResponses, RemoveChatToolsData, RemoveChatToolsErrors, RemoveChatToolsResponses, ResetChatTokensData, ResetChatTokensErrors, ResetChatTokensResponses, SelectAllChatToolsData, SelectAllChatToolsErrors, SelectAllChatToolsResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses, UpdateChatData, UpdateChatErrors, UpdateChatResponses, UpdateChatToolsData, UpdateChatToolsErrors, UpdateChatToolsResponses, UpdateToolData, UpdateToolErrors, UpdateToolInvocationPolicyData, UpdateToolInvocationPolicyErrors, UpdateToolInvocationPolicyResponses, UpdateToolResponses, UpdateTrustedDataPolicyData, UpdateTrustedDataPolicyErrors, UpdateTrustedDataPolicyResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -87,6 +87,146 @@ export const updateAgent = <ThrowOnError extends boolean = false>(options: Optio
             'Content-Type': 'application/json',
             ...options.headers
         }
+    });
+};
+
+/**
+ * Get all chats
+ */
+export const getChats = <ThrowOnError extends boolean = false>(options?: Options<GetChatsData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetChatsResponses, GetChatsErrors, ThrowOnError>({
+        url: '/api/chats',
+        ...options
+    });
+};
+
+/**
+ * Create new chat
+ */
+export const createChat = <ThrowOnError extends boolean = false>(options: Options<CreateChatData, ThrowOnError>) => {
+    return (options.client ?? client).post<CreateChatResponses, CreateChatErrors, ThrowOnError>({
+        url: '/api/chats',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Delete chat
+ */
+export const deleteChat = <ThrowOnError extends boolean = false>(options: Options<DeleteChatData, ThrowOnError>) => {
+    return (options.client ?? client).delete<DeleteChatResponses, DeleteChatErrors, ThrowOnError>({
+        url: '/api/chats/{id}',
+        ...options
+    });
+};
+
+/**
+ * Get single chat with messages
+ */
+export const getChatById = <ThrowOnError extends boolean = false>(options: Options<GetChatByIdData, ThrowOnError>) => {
+    return (options.client ?? client).get<GetChatByIdResponses, GetChatByIdErrors, ThrowOnError>({
+        url: '/api/chats/{id}',
+        ...options
+    });
+};
+
+/**
+ * Update chat
+ */
+export const updateChat = <ThrowOnError extends boolean = false>(options: Options<UpdateChatData, ThrowOnError>) => {
+    return (options.client ?? client).patch<UpdateChatResponses, UpdateChatErrors, ThrowOnError>({
+        url: '/api/chats/{id}',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Get selected tools for this chat
+ */
+export const getChatTools = <ThrowOnError extends boolean = false>(options: Options<GetChatToolsData, ThrowOnError>) => {
+    return (options.client ?? client).get<GetChatToolsResponses, GetChatToolsErrors, ThrowOnError>({
+        url: '/api/chats/{id}/tools',
+        ...options
+    });
+};
+
+/**
+ * Update selected tools for this chat
+ */
+export const updateChatTools = <ThrowOnError extends boolean = false>(options: Options<UpdateChatToolsData, ThrowOnError>) => {
+    return (options.client ?? client).put<UpdateChatToolsResponses, UpdateChatToolsErrors, ThrowOnError>({
+        url: '/api/chats/{id}/tools',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Add tools to chat selection
+ */
+export const addChatTools = <ThrowOnError extends boolean = false>(options: Options<AddChatToolsData, ThrowOnError>) => {
+    return (options.client ?? client).post<AddChatToolsResponses, AddChatToolsErrors, ThrowOnError>({
+        url: '/api/chats/{id}/tools/select',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Remove tools from chat selection
+ */
+export const removeChatTools = <ThrowOnError extends boolean = false>(options: Options<RemoveChatToolsData, ThrowOnError>) => {
+    return (options.client ?? client).post<RemoveChatToolsResponses, RemoveChatToolsErrors, ThrowOnError>({
+        url: '/api/chats/{id}/tools/deselect',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Select all tools for this chat
+ */
+export const selectAllChatTools = <ThrowOnError extends boolean = false>(options: Options<SelectAllChatToolsData, ThrowOnError>) => {
+    return (options.client ?? client).post<SelectAllChatToolsResponses, SelectAllChatToolsErrors, ThrowOnError>({
+        url: '/api/chats/{id}/tools/select-all',
+        ...options
+    });
+};
+
+/**
+ * Deselect all tools for this chat
+ */
+export const deselectAllChatTools = <ThrowOnError extends boolean = false>(options: Options<DeselectAllChatToolsData, ThrowOnError>) => {
+    return (options.client ?? client).post<DeselectAllChatToolsResponses, DeselectAllChatToolsErrors, ThrowOnError>({
+        url: '/api/chats/{id}/tools/deselect-all',
+        ...options
+    });
+};
+
+/**
+ * Reset token usage counters for a chat
+ */
+export const resetChatTokens = <ThrowOnError extends boolean = false>(options: Options<ResetChatTokensData, ThrowOnError>) => {
+    return (options.client ?? client).post<ResetChatTokensResponses, ResetChatTokensErrors, ThrowOnError>({
+        url: '/api/chats/{sessionId}/reset-tokens',
+        ...options
     });
 };
 

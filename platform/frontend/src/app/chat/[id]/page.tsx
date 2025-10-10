@@ -1,11 +1,12 @@
+import { getChatById } from '@shared/api-client';
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
-} from "@tanstack/react-query";
-import { Suspense } from "react";
-import { chatKeys } from "@/lib/chat.query";
-import { ChatView } from "./chat-view";
+} from '@tanstack/react-query';
+import { Suspense } from 'react';
+import { chatKeys } from '@/lib/chat.keys';
+import { ChatView } from './chat-view';
 
 export default async function ChatPage({
   params,
@@ -15,13 +16,15 @@ export default async function ChatPage({
   const { id } = await params;
   const queryClient = new QueryClient();
 
-  // Prefetch chat data on server with mock data
-  // Note: The actual data will be fetched on the client via useSuspenseQuery
+  // Prefetch chat data on server with actual data
   await queryClient.prefetchQuery({
     queryKey: chatKeys.detail(id),
     queryFn: async () => {
-      // Return placeholder - actual data loaded via client-side query
-      return null;
+      const response = await getChatById({ path: { id } });
+      if (response.error) {
+        throw new Error('Failed to fetch chat');
+      }
+      return response.data;
     },
   });
 

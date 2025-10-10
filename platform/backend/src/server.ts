@@ -81,6 +81,7 @@ const start = async () => {
     }));
 
     fastify.register(routes.agentRoutes);
+    fastify.register(routes.chatRoutes);
     fastify.register(routes.interactionRoutes);
     fastify.register(routes.openAiProxyRoutes);
     fastify.register(routes.toolRoutes);

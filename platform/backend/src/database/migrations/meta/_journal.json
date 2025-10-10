@@ -78,6 +78,13 @@
       "when": 1760116071330,
       "tag": "0010_neat_zombie",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1760133737567,
+      "tag": "0011_broken_sister_grimm",
+      "breakpoints": true
     }
   ]
 }

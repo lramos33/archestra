@@ -1,81 +1,26 @@
-"use client";
+'use client';
 
+import * as api from '@shared/api-client/sdk.gen';
 import type {
   Chat,
   ChatWithMessages,
   CreateChatRequest,
   UpdateChatRequest,
-} from "@shared/types/chat.types";
+} from '@shared/types/chat.types';
 import {
   useMutation,
   useQuery,
   useQueryClient,
   useSuspenseQuery,
-} from "@tanstack/react-query";
-
-// ============================================
-// Mock Data
-// ============================================
-
-const MOCK_CHATS: Chat[] = [
-  {
-    id: "chat-1",
-    agentId: "agent-1",
-    sessionId: "session-1",
-    title: "Project Architecture Discussion",
-    selectedTools: null,
-    totalPromptTokens: 1250,
-    totalCompletionTokens: 890,
-    totalTokens: 2140,
-    lastModel: "gpt-4",
-    lastContextWindow: 8192,
-    createdAt: new Date("2025-10-09T14:30:00Z"),
-    updatedAt: new Date("2025-10-09T15:45:00Z"),
-  },
-  {
-    id: "chat-2",
-    agentId: "agent-1",
-    sessionId: "session-2",
-    title: "Code Review for PR #123",
-    selectedTools: ["code-analysis", "git-tools"],
-    totalPromptTokens: 890,
-    totalCompletionTokens: 670,
-    totalTokens: 1560,
-    lastModel: "gpt-4",
-    lastContextWindow: 8192,
-    createdAt: new Date("2025-10-08T10:15:00Z"),
-    updatedAt: new Date("2025-10-08T10:30:00Z"),
-  },
-  {
-    id: "chat-3",
-    agentId: "agent-1",
-    sessionId: "session-3",
-    title: null,
-    selectedTools: null,
-    totalPromptTokens: 0,
-    totalCompletionTokens: 0,
-    totalTokens: 0,
-    lastModel: null,
-    lastContextWindow: null,
-    createdAt: new Date("2025-10-10T09:00:00Z"),
-    updatedAt: new Date("2025-10-10T09:00:00Z"),
-  },
-];
-
-// In-memory storage for mock data
-let mockChatsStorage = [...MOCK_CHATS];
+} from '@tanstack/react-query';
 
 // ============================================
 // Query Keys
 // ============================================
 
-export const chatKeys = {
-  all: ["chats"] as const,
-  lists: () => [...chatKeys.all, "list"] as const,
-  list: () => [...chatKeys.lists()] as const,
-  details: () => [...chatKeys.all, "detail"] as const,
-  detail: (id: string) => [...chatKeys.details(), id] as const,
-};
+// Import and re-export chatKeys from separate file so it can be used in Server Components
+import { chatKeys } from './chat.keys';
+export { chatKeys };
 
 // ============================================
 // Query Hooks
@@ -89,9 +34,11 @@ export function useChats() {
   return useSuspenseQuery({
     queryKey: chatKeys.list(),
     queryFn: async () => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return mockChatsStorage as Chat[];
+      const response = await api.getChats();
+      if (response.error) {
+        throw new Error('Failed to fetch chats');
+      }
+      return response.data as unknown as Chat[];
     },
   });
 }
@@ -104,21 +51,11 @@ export function useChat(chatId: string) {
   return useSuspenseQuery({
     queryKey: chatKeys.detail(chatId),
     queryFn: async () => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const chat = mockChatsStorage.find((c) => c.id === chatId);
-      if (!chat) {
-        throw new Error("Chat not found");
+      const response = await api.getChatById({ path: { id: chatId } });
+      if (response.error) {
+        throw new Error('Failed to fetch chat');
       }
-
-      // Mock chat with empty messages for now
-      const chatWithMessages: ChatWithMessages = {
-        ...chat,
-        messages: [],
-      };
-
-      return chatWithMessages;
+      return response.data as unknown as ChatWithMessages;
     },
   });
 }
@@ -130,9 +67,11 @@ export function useChatsOptional() {
   return useQuery({
     queryKey: chatKeys.list(),
     queryFn: async () => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return mockChatsStorage as Chat[];
+      const response = await api.getChats();
+      if (response.error) {
+        throw new Error('Failed to fetch chats');
+      }
+      return response.data as unknown as Chat[];
     },
   });
 }
@@ -149,26 +88,11 @@ export function useCreateChat() {
 
   return useMutation({
     mutationFn: async (data: CreateChatRequest) => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const newChat: Chat = {
-        id: `chat-${Date.now()}`,
-        agentId: data.agentId,
-        sessionId: `session-${Date.now()}`,
-        title: null,
-        selectedTools: null,
-        totalPromptTokens: 0,
-        totalCompletionTokens: 0,
-        totalTokens: 0,
-        lastModel: null,
-        lastContextWindow: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockChatsStorage = [newChat, ...mockChatsStorage];
-      return newChat;
+      const response = await api.createChat({ body: data });
+      if (response.error) {
+        throw new Error('Failed to create chat');
+      }
+      return response.data as unknown as Chat;
     },
     onSuccess: () => {
       // Invalidate chat list to refetch
@@ -191,22 +115,14 @@ export function useUpdateChat() {
       id: string;
       data: UpdateChatRequest;
     }) => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const chatIndex = mockChatsStorage.findIndex((c) => c.id === id);
-      if (chatIndex === -1) {
-        throw new Error("Chat not found");
+      const response = await api.updateChat({
+        path: { id },
+        body: data,
+      });
+      if (response.error) {
+        throw new Error('Failed to update chat');
       }
-
-      const updatedChat: Chat = {
-        ...mockChatsStorage[chatIndex],
-        ...data,
-        updatedAt: new Date(),
-      };
-
-      mockChatsStorage[chatIndex] = updatedChat;
-      return updatedChat;
+      return response.data as unknown as Chat;
     },
     onSuccess: (_, { id }) => {
       // Invalidate both list and detail
@@ -224,15 +140,10 @@ export function useDeleteChat() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const chatIndex = mockChatsStorage.findIndex((c) => c.id === id);
-      if (chatIndex === -1) {
-        throw new Error("Chat not found");
+      const response = await api.deleteChat({ path: { id } });
+      if (response.error) {
+        throw new Error('Failed to delete chat');
       }
-
-      mockChatsStorage = mockChatsStorage.filter((c) => c.id !== id);
     },
     onSuccess: () => {
       // Invalidate chat list to refetch
@@ -255,21 +166,14 @@ export function useUpdateChatTools() {
       chatId: string;
       toolIds: string[] | null;
     }) => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const chatIndex = mockChatsStorage.findIndex((c) => c.id === chatId);
-      if (chatIndex === -1) {
-        throw new Error("Chat not found");
+      const response = await api.updateChatTools({
+        path: { id: chatId },
+        body: { toolIds },
+      });
+      if (response.error) {
+        throw new Error('Failed to update tools');
       }
-
-      mockChatsStorage[chatIndex] = {
-        ...mockChatsStorage[chatIndex],
-        selectedTools: toolIds,
-        updatedAt: new Date(),
-      };
-
-      return { selectedTools: toolIds };
+      return response.data;
     },
     onSuccess: (_, { chatId }) => {
       queryClient.invalidateQueries({ queryKey: chatKeys.detail(chatId) });

@@ -1,5 +1,6 @@
 "use client";
 
+import { DEMO_AGENT_ID } from "@shared";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -12,9 +13,8 @@ export function NewAgentButton() {
 
   const handleNewChat = async () => {
     try {
-      // Using mock agent ID for now
       const result = await createChat.mutateAsync({
-        agentId: "agent-1",
+        agentId: DEMO_AGENT_ID,
       });
 
       toast.success("New chat created");

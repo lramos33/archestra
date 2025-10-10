@@ -247,6 +247,578 @@ export type UpdateAgentResponses = {
 
 export type UpdateAgentResponse = UpdateAgentResponses[keyof UpdateAgentResponses];
 
+export type GetChatsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/chats';
+};
+
+export type GetChatsErrors = {
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type GetChatsError = GetChatsErrors[keyof GetChatsErrors];
+
+export type GetChatsResponses = {
+    /**
+     * Default Response
+     */
+    200: Array<{
+        id: string;
+        agentId: string;
+        sessionId: string;
+        title: string | null;
+        selectedTools: string | number | boolean | null | {
+            [key: string]: unknown;
+        } | Array<unknown> | null;
+        totalPromptTokens: number;
+        totalCompletionTokens: number;
+        totalTokens: number;
+        lastModel: string | null;
+        lastContextWindow: number | null;
+        createdAt: string;
+        updatedAt: string;
+    }>;
+};
+
+export type GetChatsResponse = GetChatsResponses[keyof GetChatsResponses];
+
+export type CreateChatData = {
+    body: {
+        agentId: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/chats';
+};
+
+export type CreateChatErrors = {
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type CreateChatError = CreateChatErrors[keyof CreateChatErrors];
+
+export type CreateChatResponses = {
+    /**
+     * Default Response
+     */
+    201: {
+        id: string;
+        agentId: string;
+        sessionId: string;
+        title: string | null;
+        selectedTools: string | number | boolean | null | {
+            [key: string]: unknown;
+        } | Array<unknown> | null;
+        totalPromptTokens: number;
+        totalCompletionTokens: number;
+        totalTokens: number;
+        lastModel: string | null;
+        lastContextWindow: number | null;
+        createdAt: string;
+        updatedAt: string;
+    };
+};
+
+export type CreateChatResponse = CreateChatResponses[keyof CreateChatResponses];
+
+export type DeleteChatData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/chats/{id}';
+};
+
+export type DeleteChatErrors = {
+    /**
+     * Default Response
+     */
+    404: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type DeleteChatError = DeleteChatErrors[keyof DeleteChatErrors];
+
+export type DeleteChatResponses = {
+    /**
+     * Default Response
+     */
+    204: null;
+};
+
+export type DeleteChatResponse = DeleteChatResponses[keyof DeleteChatResponses];
+
+export type GetChatByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/chats/{id}';
+};
+
+export type GetChatByIdErrors = {
+    /**
+     * Default Response
+     */
+    404: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type GetChatByIdError = GetChatByIdErrors[keyof GetChatByIdErrors];
+
+export type GetChatByIdResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        id: string;
+        agentId: string;
+        sessionId: string;
+        title: string | null;
+        selectedTools: string | number | boolean | null | {
+            [key: string]: unknown;
+        } | Array<unknown> | null;
+        totalPromptTokens: number;
+        totalCompletionTokens: number;
+        totalTokens: number;
+        lastModel: string | null;
+        lastContextWindow: number | null;
+        createdAt: string;
+        updatedAt: string;
+        messages: Array<{
+            id: string;
+            chatId: string;
+            role: string;
+            content: string | number | boolean | null | {
+                [key: string]: unknown;
+            } | Array<unknown>;
+            createdAt: string;
+        }>;
+    };
+};
+
+export type GetChatByIdResponse = GetChatByIdResponses[keyof GetChatByIdResponses];
+
+export type UpdateChatData = {
+    body?: {
+        title?: string | null;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/chats/{id}';
+};
+
+export type UpdateChatErrors = {
+    /**
+     * Default Response
+     */
+    404: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type UpdateChatError = UpdateChatErrors[keyof UpdateChatErrors];
+
+export type UpdateChatResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        id: string;
+        agentId: string;
+        sessionId: string;
+        title: string | null;
+        selectedTools: string | number | boolean | null | {
+            [key: string]: unknown;
+        } | Array<unknown> | null;
+        totalPromptTokens: number;
+        totalCompletionTokens: number;
+        totalTokens: number;
+        lastModel: string | null;
+        lastContextWindow: number | null;
+        createdAt: string;
+        updatedAt: string;
+    };
+};
+
+export type UpdateChatResponse = UpdateChatResponses[keyof UpdateChatResponses];
+
+export type GetChatToolsData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/chats/{id}/tools';
+};
+
+export type GetChatToolsErrors = {
+    /**
+     * Default Response
+     */
+    404: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type GetChatToolsError = GetChatToolsErrors[keyof GetChatToolsErrors];
+
+export type GetChatToolsResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        selectedTools: Array<string> | null;
+    };
+};
+
+export type GetChatToolsResponse = GetChatToolsResponses[keyof GetChatToolsResponses];
+
+export type UpdateChatToolsData = {
+    body: {
+        toolIds: Array<string> | null;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/chats/{id}/tools';
+};
+
+export type UpdateChatToolsErrors = {
+    /**
+     * Default Response
+     */
+    404: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type UpdateChatToolsError = UpdateChatToolsErrors[keyof UpdateChatToolsErrors];
+
+export type UpdateChatToolsResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        selectedTools: Array<string> | null;
+    };
+};
+
+export type UpdateChatToolsResponse = UpdateChatToolsResponses[keyof UpdateChatToolsResponses];
+
+export type AddChatToolsData = {
+    body: {
+        toolIds: Array<string>;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/chats/{id}/tools/select';
+};
+
+export type AddChatToolsErrors = {
+    /**
+     * Default Response
+     */
+    404: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type AddChatToolsError = AddChatToolsErrors[keyof AddChatToolsErrors];
+
+export type AddChatToolsResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        selectedTools: Array<string>;
+    };
+};
+
+export type AddChatToolsResponse = AddChatToolsResponses[keyof AddChatToolsResponses];
+
+export type RemoveChatToolsData = {
+    body: {
+        toolIds: Array<string>;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/chats/{id}/tools/deselect';
+};
+
+export type RemoveChatToolsErrors = {
+    /**
+     * Default Response
+     */
+    400: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+    /**
+     * Default Response
+     */
+    404: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type RemoveChatToolsError = RemoveChatToolsErrors[keyof RemoveChatToolsErrors];
+
+export type RemoveChatToolsResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        selectedTools: Array<string>;
+    };
+};
+
+export type RemoveChatToolsResponse = RemoveChatToolsResponses[keyof RemoveChatToolsResponses];
+
+export type SelectAllChatToolsData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/chats/{id}/tools/select-all';
+};
+
+export type SelectAllChatToolsErrors = {
+    /**
+     * Default Response
+     */
+    404: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type SelectAllChatToolsError = SelectAllChatToolsErrors[keyof SelectAllChatToolsErrors];
+
+export type SelectAllChatToolsResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        message: string;
+    };
+};
+
+export type SelectAllChatToolsResponse = SelectAllChatToolsResponses[keyof SelectAllChatToolsResponses];
+
+export type DeselectAllChatToolsData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/chats/{id}/tools/deselect-all';
+};
+
+export type DeselectAllChatToolsErrors = {
+    /**
+     * Default Response
+     */
+    404: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type DeselectAllChatToolsError = DeselectAllChatToolsErrors[keyof DeselectAllChatToolsErrors];
+
+export type DeselectAllChatToolsResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        message: string;
+    };
+};
+
+export type DeselectAllChatToolsResponse = DeselectAllChatToolsResponses[keyof DeselectAllChatToolsResponses];
+
+export type ResetChatTokensData = {
+    body?: never;
+    path: {
+        sessionId: string;
+    };
+    query?: never;
+    url: '/api/chats/{sessionId}/reset-tokens';
+};
+
+export type ResetChatTokensErrors = {
+    /**
+     * Default Response
+     */
+    404: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+    /**
+     * Default Response
+     */
+    500: {
+        error: string | {
+            message: string;
+            type: string;
+        };
+    };
+};
+
+export type ResetChatTokensError = ResetChatTokensErrors[keyof ResetChatTokensErrors];
+
+export type ResetChatTokensResponses = {
+    /**
+     * Default Response
+     */
+    200: {
+        message: string;
+    };
+};
+
+export type ResetChatTokensResponse = ResetChatTokensResponses[keyof ResetChatTokensResponses];
+
 export type GetInteractionsData = {
     body?: never;
     path?: never;
