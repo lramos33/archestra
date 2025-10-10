@@ -33,7 +33,7 @@ helm_remote(
   ]
 )
 
-k8s_resource('postgresql', port_forwards=['5432:5432'], labels=['database'])
+k8s_resource('postgresql', port_forwards=['5433:5432'], labels=['database'])
 
 # Database cleanup button (manual trigger only, for development)
 local_resource(

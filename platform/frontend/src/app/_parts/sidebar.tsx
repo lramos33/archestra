@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +29,8 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import { ChatList } from "./chat-list";
+import { NewAgentButton } from "./new-agent-button";
 
 interface MenuItem {
   title: string;
@@ -150,6 +152,18 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
+          <SidebarGroupLabel className="flex items-center justify-between">
+            <span>Chats</span>
+            <NewAgentButton />
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <Suspense fallback={<ChatListSkeleton />}>
+              <ChatList />
+            </Suspense>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
           <SidebarGroupLabel>Community</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -202,5 +216,20 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
+  );
+}
+
+function ChatListSkeleton() {
+  return (
+    <SidebarMenuSub>
+      {[1, 2, 3].map((i) => (
+        <SidebarMenuSubItem key={i}>
+          <div className="flex items-center gap-2 px-2 py-1.5">
+            <div className="h-3 w-3 rounded-full bg-muted animate-pulse" />
+            <div className="h-3 flex-1 bg-muted animate-pulse rounded" />
+          </div>
+        </SidebarMenuSubItem>
+      ))}
+    </SidebarMenuSub>
   );
 }
