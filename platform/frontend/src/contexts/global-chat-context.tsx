@@ -100,6 +100,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Get a session
+  // biome-ignore lint/correctness/useExhaustiveDependencies: sessionVersion as dependency to make this reactive
   const getSession = useCallback(
     (conversationId: string) => {
       const session = sessionsRef.current.get(conversationId);
@@ -111,7 +112,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }
       return session;
     },
-    [scheduleCleanup, sessionVersion], // sessionVersion as dependency to make this reactive
+    [scheduleCleanup, sessionVersion],
   );
 
   // Clear a session manually
